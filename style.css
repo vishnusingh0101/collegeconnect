@@ -1,0 +1,36 @@
+.container {
+    margin-top: 5%;
+    align-items: center;
+    display: grid;
+}
+.title {
+    height: 5%;
+    width: 20%;
+    align-items: center;
+}
+
+.card-body {
+    padding: 2%;
+    width: 100%;
+    display: grid;
+}
+
+.card-title {
+    align-self: center;
+    font-size: x-large;
+    font-weight: bolder;
+    color: aqua;
+}
+
+ul {
+    padding-left: 0rem;
+}
+
+li {
+    margin-top: 2px;
+    display: block;
+    background-color: #afafaf;
+    padding: 5px 10px;
+    font-size: medium;
+    border-radius: 5px;
+}
