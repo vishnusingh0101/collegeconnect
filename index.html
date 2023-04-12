@@ -27,41 +27,43 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <div class="form">
-                    <div class="row">
-                        <div class="col-2">
-                            <label for="ExpenceAmount">ExpenceAmount:</label>
-                        </div>
-                        <div class="col">
-                            <input type="number" name="amt" id="amount" required>
-
-                        </div>
-                        <div class="col"></div>
-                        <div class="col-2">
-                            <label for="Description">Choose Description:</label>
-                        </div>
-                        <div class="col">
-                            <input type="text" name="desp" id="descp" required>
-                        </div>
-                        <div class="col"></div>
-                        <div class="col-2">
-                            <label for="ChooseACategory">Choose a Category:</label>
-                        </div>
-                        <div class="col">
-                            <div class="dropdown">
-                                <select name="expence" id="expence">
-                                    <option value="Movie">Movie</option>
-                                    <option value="College Fees">Fees</option>
-                                    <option value="rent">Rent</option>
-                                    <option value="Other" selected>Other</option>
-                                </select>
+                <form onsubmit="saveToLocal(event)">
+                    <div class="form">
+                        <div class="row">
+                            <div class="col-2">
+                                <label for="ExpenceAmount">ExpenceAmount:</label>
                             </div>
-                        </div>
-                        <br><br>
-                        <button class="btn btn-success" onclick="saveToLocal(event)">Submit</button>
+                            <div class="col">
+                                <input type="number" name="amt" id="amount" required>
 
+                            </div>
+                            <div class="col"></div>
+                            <div class="col-2">
+                                <label for="Description">Choose Description:</label>
+                            </div>
+                            <div class="col">
+                                <input type="text" name="desp" id="descp" required>
+                            </div>
+                            <div class="col"></div>
+                            <div class="col-2">
+                                <label for="ChooseACategory">Choose a Category:</label>
+                            </div>
+                            <div class="col">
+                                <div class="dropdown">
+                                    <select name="expence" id="expence">
+                                        <option value="Movie">Movie</option>
+                                        <option value="College Fees">Fees</option>
+                                        <option value="rent">Rent</option>
+                                        <option value="Other" selected>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br><br>
+                            <button class="btn btn-success">Submit</button>
+
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -70,8 +72,9 @@
         <ul id="expList"></ul>
     </div>
 
-    <script src="script.js"></script>
-    
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="main.js"></script>
+
 </body>
 
 </html>
