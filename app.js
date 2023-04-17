@@ -10,11 +10,15 @@ const sequelize = require('./util/database');
 
 const dataRoute = require('./routes/getData');
 const errorControl = require('./controller/error');
+const Expence = require('./model/expence');
+const User = require('./model/user');
 
 app.use(bodyParser.json({extended: false}));
 
 app.use(dataRoute);
 app.use(errorControl.get404);
+
+User.hasMany(Expence);
 
 sequelize.sync()
 .then(result => {

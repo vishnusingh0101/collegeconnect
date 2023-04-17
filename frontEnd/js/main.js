@@ -21,7 +21,7 @@ async function saveToLocal(event) {
         description,
         category
     }
-    const exp = await axios.post('http://localhost:3000/add-expence', obj);
+    const exp = await axios.post('http://localhost:3000/addExpence', obj);
     try{
         const id = exp.data.id;
         // localStorage.setItem(obj.desp, JSON.stringify(obj));

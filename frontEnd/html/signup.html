@@ -28,12 +28,13 @@
                     <p><label for="password">Password</label></p>
                     <input type="password" id="password" required>
                 </div>
-                <button type="button" id="btn">Sign Up</button>
+                <button type="button" id="btn" onclick="addToDatabase(event)">Sign Up</button>
                 <p class="loginLink">Already a member? <a href="login.html">Log in</a></p>
             </form>
             <div></div>
         </div>
     </div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="../js/signup.js"></script>
 </body>
 
