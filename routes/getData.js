@@ -11,4 +11,6 @@ router.post('/add-expence', dataControl.postExpence);
 
 router.delete('/delete/:id', dataControl.deleteExpence);
 
+router.post('/edit', dataControl.postEditExpence);
+
 module.exports = router;

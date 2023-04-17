@@ -1,6 +1,7 @@
 const Sequalize = require('sequelize');
 const sequelize = require('../util/database');
 
+
 const Expence = sequelize.define('expence', {
     id: {
         type: Sequalize.INTEGER,
