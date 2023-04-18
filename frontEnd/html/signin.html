@@ -15,6 +15,7 @@
         <div class="signBody">
             <h1 class="title">Log In</h1>
             <h5 class="message">Welcome to our - Expence Tracker</h5>
+            <h3 class="outputMsg" id="outputMsg"></h3>
             <form>
                 <div>
                     <p><label for="email">Email Address</label></p>
@@ -24,7 +25,7 @@
                     <p><label for="password">Password</label></p>
                     <input type="password" id="password" required>
                 </div>
-                <button type="button" id="btn" onclick="searchInDB(event)">Log In</button>
+                <button type="button" id="btn" onclick="validateUser(event)">Log In</button>
                 <p class="loginLink">If You are a new Member <a href="file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/signup.html">Sign Up</a></p>
             </form>
             <div></div>

@@ -7,7 +7,7 @@ async function addToDatabase(event) {
     }
 
     try{
-        const data = await axios.post('http://localhost:3000/addUser', obj);
+        const data = await axios.post('http://localhost:3000/user/signUp', obj);
         console.log(data);
     }catch(err) {
         console.log(err);

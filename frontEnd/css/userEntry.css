@@ -11,6 +11,10 @@ form {
   margin-right: 10%;
 }
 
+.errorMsg {
+  color: red;
+}
+
 .signBody {
   background-color: rgba(0, 0, 0, 0.5);
   align-items: center;
