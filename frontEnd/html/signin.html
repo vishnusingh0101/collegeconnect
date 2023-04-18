@@ -7,19 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/userEntry.css">
     <!-- <link rel="stylesheet" href="../css/newsign.css"> -->
-    <title>SingUp</title>
+    <title>SignIn</title>
 </head>
 
 <body>
     <div>
         <div class="signBody">
-            <h1 class="title">Sign Up</h1>
+            <h1 class="title">Log In</h1>
             <h5 class="message">Welcome to our - Expence Tracker</h5>
-            <form action="" method="get">
-                <div>
-                    <p><label for="userNmae">User Name</label></p>
-                    <input type="text" id="userName" required autocomplete="off">
-                </div>
+            <form>
                 <div>
                     <p><label for="email">Email Address</label></p>
                     <input type="email" id="email" name="email" required autocomplete="off">
@@ -28,14 +24,14 @@
                     <p><label for="password">Password</label></p>
                     <input type="password" id="password" required>
                 </div>
-                <button type="button" id="btn" onclick="addToDatabase(event)">Sign Up</button>
-                <p class="loginLink">Already a member? <a href="file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/signin.html">Log in</a></p>
+                <button type="button" id="btn" onclick="searchInDB(event)">Log In</button>
+                <p class="loginLink">If You are a new Member <a href="file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/signup.html">Sign Up</a></p>
             </form>
             <div></div>
         </div>
     </div>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="../js/signup.js"></script>
+    <script src="../js/signin.js"></script>
 </body>
 
 </html>
