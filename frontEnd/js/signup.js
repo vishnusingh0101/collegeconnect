@@ -9,13 +9,16 @@ async function addToDatabase(event) {
     }
 
     try{
-        const data = await axios.post('http://localhost:3000/user/signUp', obj);
-        output.innerText = data.message;
-        console.log(data);
-    }catch(err) {
+        const user = await axios.post('http://localhost:3000/user/signUp', obj);
+        console.log(user);
+        if(user.data.message == "Successfuly create new user") {
+            window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/signin.html";
+        }
+        }catch(err) {
         console.log(err);
         output.innerText = err;
-    }
+    };
+    console.log(output);
     setTimeout(()=> {
         signBody.removeChild(output);
     }, 5000);

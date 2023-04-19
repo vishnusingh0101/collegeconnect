@@ -1,9 +1,12 @@
 
 window.onload = async () => {
+    const token = localStorage.getItem('token');
+    console.log(token);
     try{
-        const exp = await axios.get('http://localhost:3000/allExpence');
+        const exp = await axios.get('http://localhost:3000/allExpence', {headers: {"Authorization": token} });
         const allExpence = exp.data;
         for(expence of allExpence) {
+            console.log(expence);
             setValueInUi(expence, expence.id);
         }
     }catch(err) {
@@ -16,12 +19,13 @@ async function saveToLocal(event) {
     const amount = document.getElementById('amount').value;
     const description = document.getElementById('descp').value;
     const category = document.getElementById('expence').value;
+    const token = localStorage.getItem('token');
     let obj = {
         amount,
         description,
         category
     }
-    const exp = await axios.post('http://localhost:3000/addExpence', obj);
+    const exp = await axios.post('http://localhost:3000/addExpence',  obj, {headers: {"Authorization": token}});
     try{
         const id = exp.data.id;
         // localStorage.setItem(obj.desp, JSON.stringify(obj));
@@ -52,7 +56,8 @@ function setValueInUi(obj, id) {
 
     //delete onclick function
     del.onclick = () => {
-        const exp = axios.delete('http://localhost:3000/delete/'+ id);
+        const token = localStorage.getItem('token');
+        const exp = axios.delete('http://localhost:3000/delete/'+ id, {headers: {"Authorization": token} });
         try{
             console.log(exp);
             // localStorage.removeItem(obj.desp);
@@ -70,6 +75,7 @@ function setValueInUi(obj, id) {
     //edit onclick function
     edit.onclick = () => {
         var button = document.getElementById('button');
+        const token = localStorage.getItem('token');
         if(button.innerHTML === 'Submit'){
             button.innerHTML = "Update";
             desp.value = obj.description;
@@ -86,7 +92,8 @@ function setValueInUi(obj, id) {
                     description,
                     category
                 }
-                const exp = axios.post('http://localhost:3000/edit', newObj);
+                console.log(newObj);
+                const exp = axios.post('http://localhost:3000/edit', newObj, {headers: {"Authorization": token} });
                 try{
                     console.log(exp);
                     expList.removeChild(li);

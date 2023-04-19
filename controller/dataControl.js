@@ -3,7 +3,8 @@ const Expence = require('../model/expence');
 
 // control to fetch all the expence details from database
 exports.getAllExpence = (req, res, next) => {
-    Expence.findAll()
+    const id = req.user.id;
+    Expence.findAll({where: {userId: id}})
     .then(expence => {
         res.json(expence);
     })
@@ -11,12 +12,14 @@ exports.getAllExpence = (req, res, next) => {
 }
 
 // control to save any expence detail in database
-exports.postExpence = async (req, res, next) => {
+exports.addExpence = async (req, res, next) => {
+
     try{
         const data = await Expence.create({
              amount: req.body.amount,
              description: req.body.description,
-             category: req.body.category
+             category: req.body.category,
+             userId: req.user.id
         });
         res.status(200).json({newExpence: data});
     }catch(err) {
@@ -30,9 +33,9 @@ exports.postEditExpence = (req, res, next) => {
     const amount = req.body.amount;
     const description = req.body.description;
     const category = req.body.category;
+    const uid = req.user.id;
     console.log(expId, amount, description, category);
-    console.log('Its in edit');
-    Expence.findByPk(expId)
+    Expence.findOne({where: {userId: uid, id: expId}})
     .then(expence => {
       expence.amount = amount;
       expence.description = description;
@@ -49,7 +52,8 @@ exports.postEditExpence = (req, res, next) => {
 // control to delete any expence detail
 exports.deleteExpence = (req, res, next) => {
     const eId = req.params.id;
-    Expence.destroy({where: {id: eId}})
+    const uid = req.user.id;
+    Expence.destroy({where: {userId: uid, id: eId}})
     .then(expence => {
         console.log(expence);
         console.log('delete successs');

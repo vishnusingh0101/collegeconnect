@@ -4,13 +4,14 @@ const express = require('express');
 const router = express.Router();
 
 const dataControl = require('../controller/dataControl');
+const authenticator = require('../middleware/auth');
 
-router.get('/allExpence', dataControl.getAllExpence);
+router.get('/allExpence', authenticator.authenticate, dataControl.getAllExpence);
 
-router.post('/addExpence', dataControl.postExpence);
+router.post('/addExpence', authenticator.authenticate, dataControl.addExpence);
 
-router.delete('/delete/:id', dataControl.deleteExpence);
+router.delete('/delete/:id', authenticator.authenticate, dataControl.deleteExpence);
 
-router.post('/edit', dataControl.postEditExpence);
+router.post('/edit', authenticator.authenticate, dataControl.postEditExpence);
 
 module.exports = router;

@@ -11,8 +11,10 @@ async function validateUser(event) {
 
         if(user) {
             console.log(user);
-            output.innerText = user.data.message;
-
+            localStorage.setItem('token', user.data.token);
+            if(user.data.message == "Log in Success") {
+                window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/index.html"
+            }
             console.log(output);
         }
     }catch(err){

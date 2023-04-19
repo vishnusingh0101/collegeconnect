@@ -23,6 +23,7 @@ app.use('/user', userRoute);
 app.use(errorControl.get404);
 
 User.hasMany(Expence);
+Expence.belongsTo(User);
 
 sequelize.sync()
 .then(result => {

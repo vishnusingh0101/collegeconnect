@@ -1,5 +1,6 @@
 const User = require('../model/user');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 exports.signUp = async (req, res, next) => {
     try{
@@ -16,16 +17,23 @@ exports.signUp = async (req, res, next) => {
     }
 }
 
+function generateToken(id, name) {
+    return jwt.sign({userId: id, name: name}, 'secretVishnu');
+}
+
 exports.signIn = async (req, res, next) => {
     const { mail, password } = req.body;
     try {
         console.log(mail);
         console.log(password);
-        const user = await User.findAll({where: {mail: mail}})
+        const user = await User.findAll({where: {mail: mail}});
         if(user.length > 0) {
-            bcrypt.compare(password, user[0].password, (err, responce) => {
-                if(!err){
-                    res.status(200).json({success: true, message: 'Log in Success'});
+            bcrypt.compare(password, user[0].password, (err, result) => {
+                if(err){
+                    throw new Error('Something went wrong');
+                }
+                if(result == true){
+                    res.status(200).json({success: true, message: 'Log in Success', token: generateToken(user[0].id, user[0].name)});
                 }else {
                     res.status(404).json({success: false, message: 'User do not exist...'});
                 }
