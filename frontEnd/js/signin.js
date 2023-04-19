@@ -10,7 +10,11 @@ async function validateUser(event) {
 
         if(user) {
             console.log(user);
-            output.value = user.data.message;
+            output.innerHTML = user.data.message;
+            setTimeout(() => {
+                
+            }, 5000);
+
             console.log(output);
         }
     }catch(err){

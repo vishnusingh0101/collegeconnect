@@ -1,7 +1,7 @@
 async function addToDatabase(event) {
     event.preventDefault();
     const obj = {
-        userName: document.getElementById('userName').value,
+        name: document.getElementById('userName').value,
         mail: document.getElementById('email').value,
         password: document.getElementById('password').value
     }

@@ -1,36 +1,40 @@
 const User = require('../model/user');
+const bcrypt = require('bcrypt');
 
 exports.signUp = async (req, res, next) => {
-    const user = await User.create({
-        name: req.body.userName,
-        mail: req.body.mail,
-        password: req.body.password
-    });
     try{
-        console.log(user);
-        res.status(200).json(user);
+        const { name, mail, password } = req.body;
+        console.log('name', name);
+        console.log('email ', mail);
+        bcrypt.hash(password, 10, async (err, hash) => {
+            console.log(err);
+            await User.create({name, mail, password: hash});
+            res.status(201).json({message: "Successfuly create new user"});
+        })
     }catch(err) {
         res.status(500).json({error: err});
-        res.status(403).json({error: "mail already exist..."});
     }
 }
 
 exports.signIn = async (req, res, next) => {
-    const mail = req.body.mail;
-    const password = req.body.password;
-    console.log(mail);
-    console.log(password);
-    User.findAll({where: {mail: mail}})
-    .then(user => {
+    const { mail, password } = req.body;
+    try {
+        console.log(mail);
+        console.log(password);
+        const user = await User.findAll({where: {mail: mail}})
         if(user.length > 0) {
-            if(user[0].password === password) {
-                res.status(200).json({success: true, message: 'Log in Success'});
-            }else {
-                res.status(404).json({success: false, message: 'User do not exist...'});
-            }
+            bcrypt.compare(password, user[0].password, (err, responce) => {
+                if(!err){
+                    res.status(200).json({success: true, message: 'Log in Success'});
+                }else {
+                    res.status(404).json({success: false, message: 'User do not exist...'});
+                }
+            })
         }else {
             res.status(500).json({success:false, message: 'not found'})
         }
-    })
-    .catch(err => console.log(err));
+    }catch(err) {
+        console.log(err);
+        res.status(500).json({error: err});
+    }
 }
