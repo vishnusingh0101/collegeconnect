@@ -1,5 +1,6 @@
 async function validateUser(event) {
     event.preventDefault();
+    const signBody = document.getElementById('signBody');
     const output = document.getElementById('outputMsg');
     const obj={
         mail: document.getElementById('email').value,
@@ -10,14 +11,15 @@ async function validateUser(event) {
 
         if(user) {
             console.log(user);
-            output.innerHTML = user.data.message;
-            setTimeout(() => {
-                
-            }, 5000);
+            output.innerText = user.data.message;
 
             console.log(output);
         }
     }catch(err){
-        console.log(err)
+        console.log(err);
+        output.innerText = err;
     }
+    setTimeout(()=> {
+        signBody.removeChild(output);
+    }, 5000);
 }
