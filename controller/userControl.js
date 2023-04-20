@@ -21,7 +21,7 @@ function generateToken(id, name) {
     return jwt.sign({userId: id, name: name}, 'secretVishnu');
 }
 
-exports.signIn = async (req, res, next) => {
+exports.login = async (req, res, next) => {
     const { mail, password } = req.body;
     try {
         console.log(mail);

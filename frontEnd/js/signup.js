@@ -12,7 +12,7 @@ async function addToDatabase(event) {
         const user = await axios.post('http://localhost:3000/user/signUp', obj);
         console.log(user);
         if(user.data.message == "Successfuly create new user") {
-            window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/signin.html";
+            window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/login.html";
         }
         }catch(err) {
         console.log(err);
