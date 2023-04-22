@@ -28,15 +28,6 @@ exports.addExpence = async (req, res, next) => {
         console.log(err);
         res.status(500).json({ error: err });
     };
-    try {
-        const user = await User.findByPk(req.user.id);
-        console.log('User found:', user);
-        await user.update({
-            totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
-        });
-    } catch (err) {
-        console.log(err);
-    };
 }
 
 exports.postEditExpence = (req, res, next) => {
@@ -61,14 +52,16 @@ exports.postEditExpence = (req, res, next) => {
 };
 
 // control to delete any expence detail
-exports.deleteExpence = (req, res, next) => {
+exports.deleteExpence = async (req, res, next) => {
     const eId = req.params.id;
+    const amount = req.params.amount;
     const uid = req.user.id;
-    Expence.destroy({ where: { userId: uid, id: eId } })
-        .then(expence => {
+    try{ 
+            const expence = await Expence.destroy({ where: { userId: uid, id: eId } });
             console.log(expence);
             console.log('delete successs');
             res.sendStatus(200);
-        })
-        .catch(err => console.log(err));
+    }catch(err){
+        console.log(err);
+    }
 }

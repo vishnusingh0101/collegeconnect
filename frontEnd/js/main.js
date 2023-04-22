@@ -70,7 +70,6 @@ function setValueInUi(obj, id) {
         const exp = axios.delete('http://localhost:3000/delete/' + id, { headers: { "Authorization": token } });
         try {
             console.log(exp);
-            // localStorage.removeItem(obj.desp);
             expList.removeChild(li);
         } catch (err) {
             console.log(err);
@@ -165,6 +164,7 @@ async function displayForPremium() {
     leaderBord.id = 'leaderbordShow';
     leaderBord.className = 'leaderbordbtn';
     leaderBord.innerText = 'Show Leaderbord';
+
     //adding to DOM
     document.getElementById('premiumButton').appendChild(h4);
     document.getElementById('premiumButton').appendChild(leaderBord);
@@ -176,21 +176,16 @@ async function displayForPremium() {
         if(leaderBordDisplayed === false){
             e.preventDefault();
             let leaderBordList = document.getElementById('leaderbord');
-            // li.textContent = 'Amount: ' + obj.amount + ' Description : ' + obj.description + ' Category: ' + obj.category;
             
             const getUser = await axios.get('http://localhost:3000/premium/showleaderbord');
             try{
                 const users = getUser.data;
 
-                users.sort(function(a, b) {
-                    return b.totalExpence - a.totalExpence;
-                });
-
                 for(let i=0; i<users.length; i++) {
                     let li = document.createElement('li');
                     console.log(users[i]);
-                    console.log(users[i].name, users[i].totalExpence);
-                    li.textContent = 'Name: ' + users[i].name + 'TotalExpence: ' + users[i].totalExpence;
+                    console.log(users[i].name, users[i].total_cost);
+                    li.textContent = 'Name: ' + users[i].name +'  '+ ' TotalExpence: ' + users[i].total_cost;                    ;
                     leaderBordList.appendChild(li);
                 }
                 console.log(users);
