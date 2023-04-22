@@ -1,6 +1,8 @@
 const Razorpay = require('razorpay');
 const Order = require('../model/orders');
 const User = require('../model/user');
+const Expence = require('../model/expence');
+const sequelize = require('../util/database');
 require('dotenv').config();
 
 const purchasepremium = async (req, res) => {
@@ -58,13 +60,25 @@ const ispremium = async (req, res, next) => {
     .catch(err => console.log(err));
 }
 
-const leaderBord = (req, res, next) => {
-    User.findAll()
-    .then(user => {
-        const userData = user.map(({name, totalExpence}) => ({name, totalExpence}));
-        res.json(userData);
-    })
-    .catch(err => console.log(err));
+const leaderBord = async (req, res, next) => {
+    try{
+        const leaderBordUsers = await User.findAll({
+            attributes: ['id', 'name', [sequelize.fn('sum', sequelize.col('expences.amount')), 'total_cost']],
+            include:[
+                {
+                    model: Expence,
+                    attributes: []
+                }
+            ],
+            group: ['User.id'],
+            order:[['total_cost', `DESC`]]
+        });
+        console.log(leaderBordUsers);
+        res.status(200).json(leaderBordUsers);
+    }catch(err) {
+        console.log(err);
+        res.status(500).json(err);
+    }
 }
 
 module.exports = {
