@@ -62,7 +62,7 @@
                                 </div>
                             </div>
                             <br><br>
-                            <button class="btn btn-success" id="button" onclick="saveToLocal(event)">Submit</button>
+                            <button class="btn btn-success" id="btn" onclick="saveToLocal(event)">Submit</button>
                         </div>
                     </div>
                 </form>
@@ -70,8 +70,13 @@
         </div>
 
     </div>
-    <div class="container">
-        <ul id="expList"></ul>
+    <div class="container list">
+        <div class="expenceList" id="expenceList">
+            <ul id="expList"></ul>
+        </div>
+        <div class="leaderbordList" id="leaderbordList">
+            <ul id="leaderbord"></ul>
+        </div>
     </div>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>

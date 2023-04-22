@@ -33,7 +33,8 @@ exports.login = async (req, res, next) => {
                     throw new Error('Something went wrong');
                 }
                 if(result == true){
-                    res.status(200).json({success: true, message: 'Log in Success', token: generateToken(user[0].id, user[0].name)});
+                    console.log(user[0]);
+                    res.status(200).json({success: true, message: 'Log in Success', token: generateToken(user[0].id, user[0].name), ispremium: user[0].ispremiumuser});
                 }else {
                     res.status(404).json({success: false, message: 'User do not exist...'});
                 }
@@ -46,3 +47,4 @@ exports.login = async (req, res, next) => {
         res.status(500).json({error: err});
     }
 }
+
