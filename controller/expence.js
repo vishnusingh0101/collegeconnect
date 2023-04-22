@@ -28,17 +28,34 @@ exports.addExpence = async (req, res, next) => {
         console.log(err);
         res.status(500).json({ error: err });
     };
+    try {
+        const user = await User.findByPk(req.user.id);
+        console.log('User found:', user);
+        await user.update({
+            totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
+        });
+    } catch (err) {
+        console.log(err);
+    };
 }
 
-exports.postEditExpence = (req, res, next) => {
+exports.postEditExpence = async (req, res, next) => {
     const expId = req.body.id;
     const amount = req.body.amount;
     const description = req.body.description;
     const category = req.body.category;
     const uid = req.user.id;
     console.log(expId, amount, description, category);
-    Expence.findOne({ where: { userId: uid, id: expId } })
-        .then(expence => {
+    const expence = Expence.findOne({ where: { userId: uid, id: expId } });
+    const user = User.findByPk(uid);
+    await Promise.all([expence, user])
+        .then(async ([expence, user]) => {
+            await user.update({
+                totalExpence: sequelize.literal('`totalExpence` - ' + expence.amount)
+            });
+            await user.update({
+                totalExpence: sequelize.literal('`totalExpence` + ' + amount)
+            });
             expence.amount = amount;
             expence.description = description;
             expence.category = category;
@@ -57,10 +74,17 @@ exports.deleteExpence = async (req, res, next) => {
     const amount = req.params.amount;
     const uid = req.user.id;
     try{ 
-            const expence = await Expence.destroy({ where: { userId: uid, id: eId } });
-            console.log(expence);
-            console.log('delete successs');
-            res.sendStatus(200);
+            const expence = Expence.destroy({ where: { userId: uid, id: eId } });
+            const user = User.findByPk(uid);
+            await Promise.all( [expence, user])
+            .then(async ([expence, user]) => {
+                console.log(expence);
+                console.log('delete successs');
+                await user.update({
+                    totalExpence: sequelize.literal('`totalExpence` - ' + amount)
+                });
+                res.sendStatus(200);
+            })
     }catch(err){
         console.log(err);
     }
