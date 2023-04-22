@@ -1,14 +1,24 @@
 
 window.onload = async () => {
     const token = localStorage.getItem('token');
-    console.log(token);
     try {
-        const exp = await axios.get('http://localhost:3000/allExpence', { headers: { "Authorization": token } });
-        const allExpence = exp.data;
-        for (expence of allExpence) {
-            console.log(expence);
-            setValueInUi(expence, expence.id);
-        }
+        const premium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
+        const exp = axios.get('http://localhost:3000/allExpence', { headers: { "Authorization": token } });
+
+        Promise.all([premium, exp])
+        .then(([premium, exp]) => {
+            const ispremium = premium.data.premium;
+            if(ispremium === true) {
+                displayForPremium();
+            }
+            const allExpence = exp.data;
+            for (expence of allExpence) {
+                console.log(expence);
+                setValueInUi(expence, expence.id);
+            }
+        })
+        .catch(err => console.log(err));
+        
     } catch (err) {
         console.log(err);
     };
@@ -120,19 +130,18 @@ function setValueInUi(obj, id) {
 
 document.getElementById('rzpButton').onclick = async function (e) {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3000/purchase/premiummembership', { headers: { "Authorization": token } });
+    const response = await axios.get('http://localhost:3000/premium/premiummembership', { headers: { "Authorization": token } });
     console.log(response);
-    var options =
-    {
+    var options = {
         "key": response.data.key_id,
         "order_id": response.data.order.id,
         "handler": async function (response) {
-            await axios.post('http://localhost:3000/purchase/updateTransactionStatus', {
+            await axios.post('http://localhost:3000/premium/updateTransactionStatus', {
                 payment_id: response.razorpay_payment_id,
                 order_id: options.order_id,
             }, { headers: { "Authorization": token } })
-
-            alert('Welcome to the premium features')
+            alert('Welcome to the premium features');
+            displayForPremium();
         },
     };
     const rzp1 = new Razorpay(options);
@@ -142,4 +151,67 @@ document.getElementById('rzpButton').onclick = async function (e) {
         console.log(responce);
         alert('Something went wrong')
     })
+}
+
+async function displayForPremium() {
+    document.getElementById('premiumButton').removeChild(document.getElementById('rzpButton'));
+    //premium confirmation through h4
+    const h4 = document.createElement('h4');
+    h4.innerHTML = "You are a premium user now";
+    h4.style.color = 'Gold';
+
+    //leaderBord buton
+    const leaderBord = document.createElement('button');
+    leaderBord.id = 'leaderbordShow';
+    leaderBord.className = 'leaderbordbtn';
+    leaderBord.innerText = 'Show Leaderbord';
+    //adding to DOM
+    document.getElementById('premiumButton').appendChild(h4);
+    document.getElementById('premiumButton').appendChild(leaderBord);
+
+    let leaderBordDisplayed = false;
+
+    //onclick feature for leaderBord
+    document.getElementById('leaderbordShow').onclick = async function (e) {
+        if(leaderBordDisplayed === false){
+            e.preventDefault();
+            let leaderBordList = document.getElementById('leaderbord');
+            // li.textContent = 'Amount: ' + obj.amount + ' Description : ' + obj.description + ' Category: ' + obj.category;
+            
+            const getUser = await axios.get('http://localhost:3000/premium/showleaderbord');
+            try{
+                const users = getUser.data;
+
+                users.sort(function(a, b) {
+                    return b.totalExpence - a.totalExpence;
+                });
+
+                for(let i=0; i<users.length; i++) {
+                    let li = document.createElement('li');
+                    console.log(users[i]);
+                    console.log(users[i].name, users[i].totalExpence);
+                    li.textContent = 'Name: ' + users[i].name + 'TotalExpence: ' + users[i].totalExpence;
+                    leaderBordList.appendChild(li);
+                }
+                console.log(users);
+                leaderBordDisplayed = true;
+                leaderBord.innerText = 'Hide Leaderbord';
+                leaderBord.id = 'leaderbordHide';
+            }catch(err) {
+                console.log(err);
+            }
+        }
+        
+    }
+
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'leaderbordHide') {
+          e.preventDefault();
+          leaderBordDisplayed = false;
+          leaderBord.innerText = 'Show Leaderbord';
+          leaderBord.id = 'leaderbordShow';
+          let leaderBordul = document.getElementById('leaderbord');
+          leaderBordul.innerHTML = '';
+        }
+      });
 }

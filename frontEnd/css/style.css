@@ -1,4 +1,8 @@
 .premiumButton {
+    display: flex;
+}
+
+.rzpButton {
     position: fixed;
     top: 1rem;
     right: 0;
@@ -8,13 +12,20 @@
     margin: 7px;
     padding: 2px;
     border-radius: 5px;
-    background-color: rgb(255, 224, 46);
+    background-color: rgb(255, 233, 107);
 }
 
-.container {
+.leaderbordbtn {
+    margin-left: 5px;
+    padding: 2px;
+    border-radius: 5px;
+    background-color: rgb(46, 238, 255);
+}
+
+.list {
     margin-top: 2%;
     align-items: center;
-    display: grid;
+    display: flex;
 }
 .title {
     height: 5%;
@@ -39,8 +50,16 @@
     color: aqua;
 }
 
+.expenceList {
+    width: 70%;
+}
+
 ul {
     padding-left: 0rem;
+}
+
+.leaderbordList {
+    margin-left: 10px;
 }
 
 li {

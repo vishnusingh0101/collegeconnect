@@ -21,7 +21,7 @@ app.use(bodyParser.json({extended: false}));
 
 app.use(dataRoute);
 app.use('/user', userRoute);
-app.use('/purchase', premiumRoute);
+app.use('/premium', premiumRoute);
 
 app.use(errorControl.get404);
 
