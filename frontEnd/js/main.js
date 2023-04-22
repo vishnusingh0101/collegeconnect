@@ -67,7 +67,7 @@ function setValueInUi(obj, id) {
     //delete onclick function
     del.onclick = () => {
         const token = localStorage.getItem('token');
-        const exp = axios.delete('http://localhost:3000/delete/' + id, { headers: { "Authorization": token } });
+        const exp = axios.delete('http://localhost:3000/delete/' + id + '/' + obj.amount, { headers: { "Authorization": token } });
         try {
             console.log(exp);
             expList.removeChild(li);
@@ -83,7 +83,7 @@ function setValueInUi(obj, id) {
 
     //edit onclick function
     edit.onclick = () => {
-        var button = document.getElementById('button');
+        var button = document.getElementById('submitBtn');
         const token = localStorage.getItem('token');
         if (button.innerHTML === 'Submit') {
             button.innerHTML = "Update";

@@ -14,12 +14,16 @@ const User = sequelize.define('user', {
     },
     mail: {
         type: Sequalize.STRING,
-        allowNull:false,
+        allowNull: false,
         unique: true
     },
     password: {
         type: Sequalize.STRING,
-        allowNull:false
+        allowNull: false
+    },
+    totalExpence: {
+        type: Sequalize.INTEGER,
+        defaultValue: 0
     },
     ispremiumuser: {
         type: Sequalize.BOOLEAN,
