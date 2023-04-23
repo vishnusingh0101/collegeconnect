@@ -11,6 +11,7 @@ const sequelize = require('./util/database');
 const dataRoute = require('./routes/expence');
 const userRoute = require('./routes/user');
 const premiumRoute = require('./routes/premium');
+const passwordRoute = require('./routes/password');
 
 const errorControl = require('./controller/error');
 const Expence = require('./model/expence');
@@ -22,6 +23,7 @@ app.use(bodyParser.json({extended: false}));
 app.use(dataRoute);
 app.use('/user', userRoute);
 app.use('/premium', premiumRoute);
+app.use('/password', passwordRoute)
 
 app.use(errorControl.get404);
 
