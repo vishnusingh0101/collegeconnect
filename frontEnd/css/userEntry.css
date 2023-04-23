@@ -68,8 +68,14 @@ button {
   border-radius: 8px;
 }
 
-.loginLink {
-  margin-left: 23%;
+.forgotPara {
+  margin-left: 33%;
+  margin-right: auto;
+  color: aliceblue;
+}
+
+.para {
+  margin-left: 21%;
   margin-right: auto;
   color: aliceblue;
 }
