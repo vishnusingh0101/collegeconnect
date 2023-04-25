@@ -1,6 +1,10 @@
 const User = require('../model/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+<<<<<<< HEAD
+=======
+const nodemailer = require('nodemailer');
+>>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7
 require('dotenv').config();
 
 exports.signUp = async (req, res, next) => {
@@ -49,3 +53,33 @@ exports.login = async (req, res, next) => {
     }
 }
 
+<<<<<<< HEAD
+=======
+exports.forgotpassword = async (req, res, next) => {
+    let testAccount = await nodemailer.createTestAccount();
+    const {mail} = req.body;
+    console.log(mail);
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        auth: {
+            user: 'lonie21@ethereal.email',
+            pass: 'QPKf3PRsaM5nJYkUaa'
+        }
+    });
+
+      let info = await transporter.sendMail({
+        from: '"Expence Tracker 👻" <expencetracker@gmail.com>', // sender address
+        to: req.body.mail, // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Its working lets do further work", // plain text body
+        html: "<b>Its working lets do further work</b>", // html body
+      });
+
+      console.log("Message sent: %s", info.messageId);
+      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    
+    res.status(200).json(info);
+}
+>>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7

@@ -101,7 +101,11 @@ function setValueInUi(obj, id) {
                     description,
                     category
                 }
+<<<<<<< HEAD
             console.log(newObj);
+=======
+                console.log(newObj);
+>>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7
                 const exp = axios.post('http://localhost:3000/edit', newObj, { headers: { "Authorization": token } });
                 try {
                     console.log(exp);
