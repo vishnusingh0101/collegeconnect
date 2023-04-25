@@ -10,6 +10,7 @@
   "author": "Vishnu Singh",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -20,8 +21,9 @@
     "nodemailer": "^6.9.1",
     "nodemon": "^2.0.22",
     "razorpay": "^2.8.6",
-    "sequelize": "^6.31.0"
-  },
-  "devDependencies": {
+    "sequelize": "^6.31.0",
+    "sib-api-v3-sdk": "^8.5.0",
+    "sib-api-v3-typescript": "^2.2.2",
+    "uuid": "^9.0.0"
   }
 }

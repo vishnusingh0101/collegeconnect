@@ -17,6 +17,7 @@ const errorControl = require('./controller/error');
 const Expence = require('./model/expence');
 const User = require('./model/user');
 const Order = require('./model/orders');
+const Forgotpassword = require('./model/password');
 
 app.use(bodyParser.json({extended: false}));
 
@@ -32,6 +33,9 @@ Expence.belongsTo(User);
 
 User.hasMany(Order);
 Order.belongsTo(User);
+
+User.hasMany(Forgotpassword);
+Forgotpassword.belongsTo(User);
 
 sequelize.sync()
 .then(result => {
