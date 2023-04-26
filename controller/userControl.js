@@ -1,10 +1,8 @@
 const User = require('../model/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-<<<<<<< HEAD
-=======
+
 const nodemailer = require('nodemailer');
->>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7
 require('dotenv').config();
 
 exports.signUp = async (req, res, next) => {
@@ -53,8 +51,6 @@ exports.login = async (req, res, next) => {
     }
 }
 
-<<<<<<< HEAD
-=======
 exports.forgotpassword = async (req, res, next) => {
     let testAccount = await nodemailer.createTestAccount();
     const {mail} = req.body;
@@ -82,4 +78,3 @@ exports.forgotpassword = async (req, res, next) => {
     
     res.status(200).json(info);
 }
->>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7

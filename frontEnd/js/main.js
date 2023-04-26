@@ -6,19 +6,19 @@ window.onload = async () => {
         const exp = axios.get('http://localhost:3000/allExpence', { headers: { "Authorization": token } });
 
         Promise.all([premium, exp])
-        .then(([premium, exp]) => {
-            const ispremium = premium.data.premium;
-            if(ispremium === true) {
-                displayForPremium();
-            }
-            const allExpence = exp.data;
-            for (expence of allExpence) {
-                console.log(expence);
-                setValueInUi(expence, expence.id);
-            }
-        })
-        .catch(err => console.log(err));
-        
+            .then(([premium, exp]) => {
+                const ispremium = premium.data.premium;
+                if (ispremium === true) {
+                    displayForPremium();
+                }
+                const allExpence = exp.data;
+                for (expence of allExpence) {
+                    console.log(expence);
+                    setValueInUi(expence, expence.id);
+                }
+            })
+            .catch(err => console.log(err));
+
     } catch (err) {
         console.log(err);
     };
@@ -101,11 +101,7 @@ function setValueInUi(obj, id) {
                     description,
                     category
                 }
-<<<<<<< HEAD
-            console.log(newObj);
-=======
                 console.log(newObj);
->>>>>>> 5a619ac0b636be792b88d67f738ec8140a3106c7
                 const exp = axios.post('http://localhost:3000/edit', newObj, { headers: { "Authorization": token } });
                 try {
                     console.log(exp);
@@ -158,6 +154,7 @@ document.getElementById('rzpButton').onclick = async function (e) {
 
 async function displayForPremium() {
     document.getElementById('premiumButton').removeChild(document.getElementById('rzpButton'));
+
     //premium confirmation through h4
     const h4 = document.createElement('h4');
     h4.innerHTML = "You are a premium user now";
@@ -169,48 +166,76 @@ async function displayForPremium() {
     leaderBord.className = 'leaderbordbtn';
     leaderBord.innerText = 'Show Leaderbord';
 
+    //Download report button
+    const downloadexpence = document.createElement('button');
+    downloadexpence.id = 'downloadexpense';
+    downloadexpence.className = 'downloadexpense';
+    downloadexpence.innerText = 'Download report';
+
     //adding to DOM
     document.getElementById('premiumButton').appendChild(h4);
     document.getElementById('premiumButton').appendChild(leaderBord);
+    document.getElementById('premiumButton').appendChild(downloadexpence);
 
     let leaderBordDisplayed = false;
 
     //onclick feature for leaderBord
     document.getElementById('leaderbordShow').onclick = async function (e) {
-        if(leaderBordDisplayed === false){
+        if (leaderBordDisplayed === false) {
             e.preventDefault();
             let leaderBordList = document.getElementById('leaderbord');
-            
+
             const getUser = await axios.get('http://localhost:3000/premium/showleaderbord');
-            try{
+            try {
                 const users = getUser.data;
 
-                for(let i=0; i<users.length; i++) {
+                for (let i = 0; i < users.length; i++) {
                     let li = document.createElement('li');
                     console.log(users[i]);
                     console.log(users[i].name, users[i].total_cost);
-                    li.textContent = 'Name: ' + users[i].name +'  '+ ' TotalExpence: ' + users[i].total_cost;                    ;
+                    li.textContent = 'Name: ' + users[i].name + '  ' + ' TotalExpence: ' + users[i].total_cost;;
                     leaderBordList.appendChild(li);
                 }
                 console.log(users);
                 leaderBordDisplayed = true;
                 leaderBord.innerText = 'Hide Leaderbord';
                 leaderBord.id = 'leaderbordHide';
-            }catch(err) {
+            } catch (err) {
                 console.log(err);
             }
         }
-        
+
     }
 
-    document.addEventListener('click', function(e) {
+    //onclick feature for report
+    downloadexpence.onclick = async () => {
+        axios.get('http://localhost:3000/user/download', { headers: { "Authorization": token } })
+            .then((response) => {
+                if (response.status === 201) {
+                    //the bcakend is essentially sending a download link
+                    //  which if we open in browser, the file would download
+                    var a = document.createElement("a");
+                    a.href = response.data.fileUrl;
+                    a.download = 'myexpense.csv';
+                    a.click();
+                } else {
+                    throw new Error(response.data.message)
+                }
+
+            })
+            .catch((err) => {
+                showError(err)
+            });
+    }
+
+    document.addEventListener('click', function (e) {
         if (e.target && e.target.id === 'leaderbordHide') {
-          e.preventDefault();
-          leaderBordDisplayed = false;
-          leaderBord.innerText = 'Show Leaderbord';
-          leaderBord.id = 'leaderbordShow';
-          let leaderBordul = document.getElementById('leaderbord');
-          leaderBordul.innerHTML = '';
+            e.preventDefault();
+            leaderBordDisplayed = false;
+            leaderBord.innerText = 'Show Leaderbord';
+            leaderBord.id = 'leaderbordShow';
+            let leaderBordul = document.getElementById('leaderbord');
+            leaderBordul.innerHTML = '';
         }
-      });
+    });
 }
