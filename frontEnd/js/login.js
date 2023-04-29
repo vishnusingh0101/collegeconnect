@@ -8,7 +8,7 @@ async function validateUser(event) {
         password: document.getElementById('password').value
     }
     try{
-        const user = await axios.post('http://localhost:3000/user/login', obj);
+        const user = await axios.post('http://localhost:3000/login', obj);
 
         if(user) {
             console.log(user);

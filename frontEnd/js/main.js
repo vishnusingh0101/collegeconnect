@@ -3,7 +3,8 @@ window.onload = async () => {
     const token = localStorage.getItem('token');
     try {
         const premium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
-        const exp = axios.get('http://localhost:3000/allExpence', { headers: { "Authorization": token } });
+        const exp = axios.get('http://localhost:3000/user/allExpence', { headers: { "Authorization": token } });
+
 
         Promise.all([premium, exp])
             .then(([premium, exp]) => {
@@ -11,13 +12,20 @@ window.onload = async () => {
                 if (ispremium === true) {
                     displayForPremium();
                 }
-                const allExpence = exp.data;
-                for (expence of allExpence) {
-                    console.log(expence);
-                    setValueInUi(expence, expence.id);
+                const allExpence = exp.data.expence;
+                if (exp.data.success == true) {
+                    for (expence of allExpence) {
+                        setValueInUi(expence, expence.id);
+                    }
+                } else {
+                    document.getElementById('outputMsg').innerText = exp.error;
+                    setTimeout(() => {
+                        document.getElementById('outputMsg').innerText = '';
+                    }, 4000);
                 }
             })
             .catch(err => console.log(err));
+
 
     } catch (err) {
         console.log(err);
@@ -35,7 +43,7 @@ async function saveToLocal(event) {
         description,
         category
     }
-    const exp = await axios.post('http://localhost:3000/addExpence', obj, { headers: { "Authorization": token } });
+    const exp = await axios.post('http://localhost:3000/user/addExpence', obj, { headers: { "Authorization": token } });
     try {
         const id = exp.data.id;
         // localStorage.setItem(obj.desp, JSON.stringify(obj));
@@ -67,7 +75,7 @@ function setValueInUi(obj, id) {
     //delete onclick function
     del.onclick = () => {
         const token = localStorage.getItem('token');
-        const exp = axios.delete('http://localhost:3000/delete/' + id + '/' + obj.amount, { headers: { "Authorization": token } });
+        const exp = axios.delete('http://localhost:3000/user/delete/' + id + '/' + obj.amount, { headers: { "Authorization": token } });
         try {
             console.log(exp);
             expList.removeChild(li);
@@ -102,7 +110,7 @@ function setValueInUi(obj, id) {
                     category
                 }
                 console.log(newObj);
-                const exp = axios.post('http://localhost:3000/edit', newObj, { headers: { "Authorization": token } });
+                const exp = axios.post('http://localhost:3000/user/edit', newObj, { headers: { "Authorization": token } });
                 try {
                     console.log(exp);
                     expList.removeChild(li);
@@ -163,19 +171,26 @@ async function displayForPremium() {
     //leaderBord buton
     const leaderBord = document.createElement('button');
     leaderBord.id = 'leaderbordShow';
-    leaderBord.className = 'leaderbordbtn';
+    leaderBord.className = 'premiumpageBtn';
     leaderBord.innerText = 'Show Leaderbord';
 
     //Download report button
     const downloadexpence = document.createElement('button');
     downloadexpence.id = 'downloadexpense';
-    downloadexpence.className = 'downloadexpense';
+    downloadexpence.className = 'premiumpageBtn';
     downloadexpence.innerText = 'Download report';
+
+    //Download report button
+    const totalReport = document.createElement('button');
+    totalReport.id = 'totalReport';
+    totalReport.className = 'premiumpageBtn';
+    totalReport.innerText = 'Report History';
 
     //adding to DOM
     document.getElementById('premiumButton').appendChild(h4);
     document.getElementById('premiumButton').appendChild(leaderBord);
     document.getElementById('premiumButton').appendChild(downloadexpence);
+    document.getElementById('premiumButton').appendChild(totalReport);
 
     let leaderBordDisplayed = false;
 
@@ -187,16 +202,13 @@ async function displayForPremium() {
 
             const getUser = await axios.get('http://localhost:3000/premium/showleaderbord');
             try {
-                const users = getUser.data;
+                const users = getUser.data.leaderborddata;
 
                 for (let i = 0; i < users.length; i++) {
                     let li = document.createElement('li');
-                    console.log(users[i]);
-                    console.log(users[i].name, users[i].total_cost);
-                    li.textContent = 'Name: ' + users[i].name + '  ' + ' TotalExpence: ' + users[i].total_cost;;
+                    li.textContent = 'Name: ' + users[i].name + '  ' + ' TotalExpence: ' + users[i].totalExpence;
                     leaderBordList.appendChild(li);
                 }
-                console.log(users);
                 leaderBordDisplayed = true;
                 leaderBord.innerText = 'Hide Leaderbord';
                 leaderBord.id = 'leaderbordHide';
@@ -209,13 +221,16 @@ async function displayForPremium() {
 
     //onclick feature for report
     downloadexpence.onclick = async () => {
+        const token = localStorage.getItem('token');
+        console.log(token);
         axios.get('http://localhost:3000/user/download', { headers: { "Authorization": token } })
             .then((response) => {
-                if (response.status === 201) {
+                console.log(response);
+                if (response.status === 200) {
                     //the bcakend is essentially sending a download link
                     //  which if we open in browser, the file would download
                     var a = document.createElement("a");
-                    a.href = response.data.fileUrl;
+                    a.href = response.data.fileURL;
                     a.download = 'myexpense.csv';
                     a.click();
                 } else {
@@ -224,8 +239,11 @@ async function displayForPremium() {
 
             })
             .catch((err) => {
-                showError(err)
+                console.log(err);
             });
+    }
+    totalReport.onclick = () => {
+        window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/report.html";
     }
 
     document.addEventListener('click', function (e) {

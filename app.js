@@ -17,14 +17,15 @@ const errorControl = require('./controller/error');
 const Expence = require('./model/expence');
 const User = require('./model/user');
 const Order = require('./model/orders');
+const Report = require('./model/report');
 
 const Forgotpassword = require('./model/password');
 
 
 app.use(bodyParser.json({extended: false}));
 
-app.use(dataRoute);
-app.use('/user', userRoute);
+app.use('/user', dataRoute);
+app.use(userRoute);
 app.use('/premium', premiumRoute);
 app.use('/password', passwordRoute)
 
@@ -38,6 +39,9 @@ Order.belongsTo(User);
 
 User.hasMany(Forgotpassword);
 Forgotpassword.belongsTo(User);
+
+User.hasMany(Report);
+Report.belongsTo(User);
 
 sequelize.sync()
 .then(result => {

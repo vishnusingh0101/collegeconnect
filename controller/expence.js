@@ -1,23 +1,43 @@
 const Expence = require('../model/expence');
 const User = require('../model/user');
 const sequelize = require('../util/database');
+const Userservices = require('../services/userservices');
+const S3services = require('../services/S3services');
+const Report = require('../model/report');
 
+
+
+const downloadexpence = async (req, res, next) => {
+    try{
+    const expences = await Userservices.getExpences(req);
+    const stringifedExpence = JSON.stringify(expences);
+    const userName = req.user.name;
+    const filename = `Expence_${userName} / ${new Date()}.txt`;
+    const fileURL = await S3services.uploadToS3(stringifedExpence, filename);
+    await Report.create({link: fileURL, userId: req.user.id});
+    res.status(200).json({ fileURL, success: true });
+    }catch(err) {
+        console.log(err);
+        res.status(500).json({fileURL:'', success: false, error: err});
+
+    }
+}
 
 // control to fetch all the expence details from database
-exports.getAllExpence = (req, res, next) => {
-    const id = req.user.id;
-    Expence.findAll({ where: { userId: id } })
-        .then(expence => {
-            res.json(expence);
+const getexpences = (req, res, next) => {
+    req.user.getExpences().then(expence => {
+        return res.status(200).json({ expence, success: true });
+    })
+        .catch(err => {
+            return res.status(402).json({ error: err, success: false });
         })
-        .catch(err => console.log(err));
 }
 
 // control to save any expence detail in database
-exports.addExpence = async (req, res, next) => {
+const addExpence = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-        const user = await User.findByPk(req.user.id, {transaction: t});
+        const user = await User.findByPk(req.user.id, { transaction: t });
         console.log('User found:', user);
         await user.update({
             totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
@@ -27,8 +47,8 @@ exports.addExpence = async (req, res, next) => {
             description: req.body.description,
             category: req.body.category,
             userId: req.user.id,
-        }, {transaction: t});
-        
+        }, { transaction: t });
+
         await t.commit();
         res.status(200).json({ newExpence: data });
     } catch (err) {
@@ -38,7 +58,7 @@ exports.addExpence = async (req, res, next) => {
     };
 }
 
-exports.postEditExpence = async (req, res, next) => {
+const postEditExpence = async (req, res, next) => {
     const t = await sequelize.transaction();
     const expId = req.body.id;
     const amount = req.body.amount;
@@ -46,8 +66,8 @@ exports.postEditExpence = async (req, res, next) => {
     const category = req.body.category;
     const uid = req.user.id;
     console.log(expId, amount, description, category);
-    const expence = Expence.findOne({ where: { userId: uid, id: expId } }, {transaction: t});
-    const user = User.findByPk(uid, {transaction: t});
+    const expence = Expence.findOne({ where: { userId: uid, id: expId } }, { transaction: t });
+    const user = User.findByPk(uid, { transaction: t });
     await Promise.all([expence, user])
         .then(async ([expence, user]) => {
             await user.update({
@@ -73,15 +93,15 @@ exports.postEditExpence = async (req, res, next) => {
 };
 
 // control to delete any expence detail
-exports.deleteExpence = async (req, res, next) => {
+const deleteExpence = async (req, res, next) => {
     const t = await sequelize.transaction();
     const eId = req.params.id;
     const amount = req.params.amount;
     const uid = req.user.id;
-    try{ 
-            const expence = Expence.destroy({ where: { userId: uid, id: eId } }, {transaction: t});
-            const user = User.findByPk(uid);
-            await Promise.all( [expence, user])
+    try {
+        const expence = Expence.destroy({ where: { userId: uid, id: eId } }, { transaction: t });
+        const user = User.findByPk(uid);
+        await Promise.all([expence, user])
             .then(async ([expence, user]) => {
                 console.log(expence);
                 console.log('delete successs');
@@ -91,8 +111,18 @@ exports.deleteExpence = async (req, res, next) => {
                 res.sendStatus(200);
                 t.commit();
             })
-    }catch(err){
+    } catch (err) {
         t.rollback();
         console.log(err);
     }
 }
+
+module.exports = {
+    downloadexpence,
+    getexpences,
+    addExpence,
+    postEditExpence,
+    deleteExpence
+
+}
+
