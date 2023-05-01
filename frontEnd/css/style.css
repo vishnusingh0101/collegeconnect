@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 .navBar {
     display: flex;
     margin-bottom: 5px;
@@ -7,13 +9,18 @@
     position: fixed;
     top: 1rem;
     right: 0;
+    border: none;
 }
 
 .premiumpageBtn {
+    border: none;
     margin-left: 5px;
     padding: 2px;
     border-radius: 5px;
-    background-color: rgb(46, 238, 255);
+}
+
+.premiumpageBtn:hover {
+    background-color: #1b981f;
 }
 
 #rzpButton {
@@ -35,6 +42,7 @@
     align-items: center;
     display: flex;
 }
+
 .title {
     height: 5%;
     width: 20%;
@@ -47,7 +55,7 @@
     display: grid;
 }
 
-.row{
+.row {
     --bs-gutter-x: 1rem;
 }
 
@@ -59,7 +67,7 @@
 }
 
 .expenceList {
-    width: 70%;
+    width: 100%;
 }
 
 ul {
@@ -70,7 +78,7 @@ ul {
     margin-left: 10px;
 }
 
-li {
+.leaderbordList li, .expenceList li{
     margin-top: 2px;
     display: block;
     background-color: #afafaf;
@@ -79,6 +87,30 @@ li {
     border-radius: 5px;
 }
 
-.liBtn{
+.liBtn {
     background-color: #ffcf3f;
+}
+
+/* pagenation */
+
+.pagination {
+    align-items: center;
+    display: flex;
+    margin-top: 2%;
+}
+
+.pagiInside {
+    margin-left: auto;
+    margin-right: auto;
+    width: 10%;
+}
+
+.pagiInside button {
+    list-style-type: none;
+    margin: 5px;
+    background-color: #c3d8dba3;
+    border-radius: 30%;
+    border: none;
+    padding: 5%;
+    font-size: larger;
 }

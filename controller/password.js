@@ -44,8 +44,10 @@ const forgotpassword = async (req, res, next) => {
                     console.log(response);
                     return res.json({ message: 'Link to reset password sent to your mail ', sucess: true })
                 })
-                .catch((error) => {
-                    throw new Error(error);
+                .catch((err) => {
+                    console.log(err)
+                    res.status(400).json({error: err});
+                    
                 })
 
         } else {

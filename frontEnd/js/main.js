@@ -2,21 +2,26 @@
 window.onload = async () => {
     const token = localStorage.getItem('token');
     try {
-        const premium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
-        const exp = axios.get('http://localhost:3000/user/allExpence', { headers: { "Authorization": token } });
+        const objUrlParams = new URLSearchParams(window.location.search);
+        const page = objUrlParams.get("page") || 1;
 
 
-        Promise.all([premium, exp])
+        const ispremium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
+        const exp = axios.get(`http://localhost:3000/user/allExpence?page=${page}`, { headers: { "Authorization": token } });
+
+        await Promise.all([ispremium, exp])
             .then(([premium, exp]) => {
-                const ispremium = premium.data.premium;
+                const ispremium = premium.data.ispremium;
                 if (ispremium === true) {
                     displayForPremium();
                 }
-                const allExpence = exp.data.expence;
+                console.log(exp.data.expences);
+                const allExpence = exp.data.expences;
                 if (exp.data.success == true) {
                     for (expence of allExpence) {
                         setValueInUi(expence, expence.id);
                     }
+                    showPagenation(exp.data.pagedata);
                 } else {
                     document.getElementById('outputMsg').innerText = exp.error;
                     setTimeout(() => {
@@ -53,7 +58,10 @@ async function saveToLocal(event) {
         console.log(err);
     }
 }
+
+let numOfExp = 0;
 function setValueInUi(obj, id) {
+    numOfExp++;
     var expList = document.getElementById('expList');
 
     //delete button here
@@ -62,6 +70,7 @@ function setValueInUi(obj, id) {
     del.type = 'button';
     del.value = 'Delete';
     del.style.marginLeft = '10px';
+    del.style.marginRight = 'auto';
 
     //edit button here
     var edit = document.createElement('input');
@@ -69,6 +78,7 @@ function setValueInUi(obj, id) {
     edit.type = 'button';
     edit.value = 'edit';
     edit.style.marginLeft = '10px';
+    edit.style.marginRight = '10px';
 
 
 
@@ -125,6 +135,8 @@ function setValueInUi(obj, id) {
 
     }
 
+
+    
     let li = document.createElement('li');
     li.textContent = 'Amount: ' + obj.amount + ' Description : ' + obj.description + ' Category: ' + obj.category;
     li.appendChild(del);
@@ -133,6 +145,58 @@ function setValueInUi(obj, id) {
     amt.value = '';
     desp.value = '';
     expence.value = '';
+    if(numOfExp > 5) {
+        let listItem = document.getElementsByTagName(li);
+        console.log(document.getElementsByTagName(li));
+        console.log(listItem);
+        expList.removeChild(listItem[4]);
+    }
+}
+
+//pagenation
+function showPagenation(pagedata) {
+    console.log('it worked');
+    const currentPage = pagedata.currentPage;
+    const hasNextPage = pagedata.hasNextPage;
+    const nextPage = pagedata.nextPage
+    const hasPreviousPage = pagedata.hasPreviousPage
+    const previousPage = pagedata.previousPage
+    const lastPage = pagedata.lastPage
+    const pagiInside = document.getElementById('pagiInside');
+
+    {
+        pagiInside.innerHTML = '';
+        if (hasPreviousPage) {
+            const btn2 = document.createElement('button');
+            btn2.innerHTML = previousPage;
+            btn2.addEventListener('click', () => getProducts(previousPage))
+            pagiInside.appendChild(btn2);
+        }
+
+        const btn1 = document.createElement('button');
+        btn1.innerHTML = `<h3>${currentPage}<h3/>`;
+        btn1.addEventListener('click', () => getProducts(currentPage))
+        pagiInside.appendChild(btn1);
+
+        if (hasNextPage) {
+            const btn1 = document.createElement('button');
+            btn1.innerHTML = nextPage;
+            btn1.addEventListener('click', () => getProducts(nextPage))
+            pagiInside.appendChild(btn1);
+        }
+    };
+
+}
+
+async function getProducts(page) {
+    const token = localStorage.getItem('token');
+    try{
+        const exp = await axios.get(`http://localhost:3000/user/allExpence?page=${page}`, { headers: { "Authorization": token } });
+        setValueInUi(expence, expence.id);
+        showPagenation(exp.data.pagedata);
+    }catch(err){
+        console.log(err);
+    }
 }
 
 document.getElementById('rzpButton').onclick = async function (e) {
@@ -171,19 +235,19 @@ async function displayForPremium() {
     //leaderBord buton
     const leaderBord = document.createElement('button');
     leaderBord.id = 'leaderbordShow';
-    leaderBord.className = 'premiumpageBtn';
+    leaderBord.className = 'premiumpageBtn btn-success';
     leaderBord.innerText = 'Show Leaderbord';
 
     //Download report button
     const downloadexpence = document.createElement('button');
     downloadexpence.id = 'downloadexpense';
-    downloadexpence.className = 'premiumpageBtn';
+    downloadexpence.className = 'premiumpageBtn btn-success';
     downloadexpence.innerText = 'Download report';
 
     //Download report button
     const totalReport = document.createElement('button');
     totalReport.id = 'totalReport';
-    totalReport.className = 'premiumpageBtn';
+    totalReport.className = 'premiumpageBtn btn-success';
     totalReport.innerText = 'Report History';
 
     //adding to DOM
@@ -212,12 +276,26 @@ async function displayForPremium() {
                 leaderBordDisplayed = true;
                 leaderBord.innerText = 'Hide Leaderbord';
                 leaderBord.id = 'leaderbordHide';
+                document.getElementById('leaderbordList').style.width = '40%';
             } catch (err) {
                 console.log(err);
             }
         }
 
     }
+
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'leaderbordHide') {
+            e.preventDefault();
+            leaderBordDisplayed = false;
+            leaderBord.innerText = 'Show Leaderbord';
+            leaderBord.id = 'leaderbordShow';
+            let leaderBordul = document.getElementById('leaderbord');
+            leaderBordul.innerHTML = '';
+            document.getElementById('leaderbordList').style.width = '0%';
+        }
+    });
+
 
     //onclick feature for report
     downloadexpence.onclick = async () => {
@@ -246,14 +324,5 @@ async function displayForPremium() {
         window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTracker/frontEnd/html/report.html";
     }
 
-    document.addEventListener('click', function (e) {
-        if (e.target && e.target.id === 'leaderbordHide') {
-            e.preventDefault();
-            leaderBordDisplayed = false;
-            leaderBord.innerText = 'Show Leaderbord';
-            leaderBord.id = 'leaderbordShow';
-            let leaderBordul = document.getElementById('leaderbord');
-            leaderBordul.innerHTML = '';
-        }
-    });
 }
+

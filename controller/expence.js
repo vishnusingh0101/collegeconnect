@@ -24,13 +24,46 @@ const downloadexpence = async (req, res, next) => {
 }
 
 // control to fetch all the expence details from database
+const ITEMS_PER_PAGE = 5;
 const getexpences = (req, res, next) => {
-    req.user.getExpences().then(expence => {
-        return res.status(200).json({ expence, success: true });
-    })
-        .catch(err => {
-            return res.status(402).json({ error: err, success: false });
+    const id = req.user.id;
+    const page = +req.query.page || 1;
+    let totalItems;
+    Expence.count() 
+        .then( total => {
+            totalItems = total;
+            return Expence.findAll(
+                {
+                where: {userId: id,},
+                offset: (page-1) * ITEMS_PER_PAGE,
+                limit: ITEMS_PER_PAGE,
+            });
         })
+        .then(expences => {
+            res.status(200).json({
+                expences: expences,
+                success: true,
+                pagedata: {
+                    currentPage: page,
+                    hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                    nextPage: page+1,
+                    hasPreviousPage: page > 1,
+                    previousPage: page - 1,
+                    lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
+                }
+            })
+            console.log(page -1);
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(402).json({error: err, success: false});
+        });
+    // req.user.getExpences().then(expence => {
+    //     return res.status(200).json({ expence, success: true });
+    // })
+    //     .catch(err => {
+    //         return res.status(402).json({ error: err, success: false });
+    //     })
 }
 
 // control to save any expence detail in database
