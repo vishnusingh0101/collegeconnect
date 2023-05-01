@@ -3,6 +3,11 @@
 .navBar {
     display: flex;
     margin-bottom: 5px;
+    width: 80%;
+}
+
+.pageQuantity{
+    display: flex;
 }
 
 .rzpButton {

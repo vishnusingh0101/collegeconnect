@@ -1,17 +1,27 @@
+const dropdown = document.getElementById('quantity');
+// localStorage.setItem("defaultDropdownValue", 5);
+dropdown.addEventListener('change', () => {
+    localStorage.setItem('itemsPerPage', document.getElementById('quantity').value);
+    location.reload();
+});
 
 window.onload = async () => {
     const token = localStorage.getItem('token');
     try {
         const objUrlParams = new URLSearchParams(window.location.search);
         const page = objUrlParams.get("page") || 1;
+        const selectedValue = localStorage.getItem("itemsPerPage");
+        if (selectedValue) {
+            dropdown.value = selectedValue;
+        }
+        const quantity = selectedValue;
+        const premium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
+        const exp = axios.get(`http://localhost:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
 
-
-        const ispremium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
-        const exp = axios.get(`http://localhost:3000/user/allExpence?page=${page}`, { headers: { "Authorization": token } });
-
-        await Promise.all([ispremium, exp])
+        await Promise.all([premium, exp])
             .then(([premium, exp]) => {
                 const ispremium = premium.data.ispremium;
+                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+ispremium);
                 if (ispremium === true) {
                     displayForPremium();
                 }
@@ -51,8 +61,12 @@ async function saveToLocal(event) {
     const exp = await axios.post('http://localhost:3000/user/addExpence', obj, { headers: { "Authorization": token } });
     try {
         const id = exp.data.id;
-        // localStorage.setItem(obj.desp, JSON.stringify(obj));
         setValueInUi(obj, id);
+        if (numOfExp > 5) {
+            let li = document.getElementsByTagName('li');
+            console.log(li);
+            expList.removeChild(li[0]);
+        }
     }
     catch (err) {
         console.log(err);
@@ -134,9 +148,6 @@ function setValueInUi(obj, id) {
         }
 
     }
-
-
-    
     let li = document.createElement('li');
     li.textContent = 'Amount: ' + obj.amount + ' Description : ' + obj.description + ' Category: ' + obj.category;
     li.appendChild(del);
@@ -145,12 +156,6 @@ function setValueInUi(obj, id) {
     amt.value = '';
     desp.value = '';
     expence.value = '';
-    if(numOfExp > 5) {
-        let listItem = document.getElementsByTagName(li);
-        console.log(document.getElementsByTagName(li));
-        console.log(listItem);
-        expList.removeChild(listItem[4]);
-    }
 }
 
 //pagenation
@@ -190,11 +195,23 @@ function showPagenation(pagedata) {
 
 async function getProducts(page) {
     const token = localStorage.getItem('token');
-    try{
-        const exp = await axios.get(`http://localhost:3000/user/allExpence?page=${page}`, { headers: { "Authorization": token } });
-        setValueInUi(expence, expence.id);
-        showPagenation(exp.data.pagedata);
-    }catch(err){
+    const quantity = document.getElementById('quantity').value;
+    try {
+        const exp = await axios.get(`http://localhost:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
+        if (exp.data.success == true) {
+            document.getElementById('expList').innerHTML = '';
+            const allExpence = exp.data.expences;
+            for (expence of allExpence) {
+                setValueInUi(expence, expence.id);
+            }
+            showPagenation(exp.data.pagedata);
+        } else {
+            document.getElementById('outputMsg').innerText = exp.error;
+            setTimeout(() => {
+                document.getElementById('outputMsg').innerText = '';
+            }, 4000);
+        }
+    } catch (err) {
         console.log(err);
     }
 }

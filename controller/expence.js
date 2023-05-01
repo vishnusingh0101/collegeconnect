@@ -24,10 +24,11 @@ const downloadexpence = async (req, res, next) => {
 }
 
 // control to fetch all the expence details from database
-const ITEMS_PER_PAGE = 5;
 const getexpences = (req, res, next) => {
     const id = req.user.id;
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.items;
+    console.log('page number ------- '+page);
     let totalItems;
     Expence.count() 
         .then( total => {
@@ -52,18 +53,11 @@ const getexpences = (req, res, next) => {
                     lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
                 }
             })
-            console.log(page -1);
         })
         .catch(err => {
             console.log(err);
             return res.status(402).json({error: err, success: false});
         });
-    // req.user.getExpences().then(expence => {
-    //     return res.status(200).json({ expence, success: true });
-    // })
-    //     .catch(err => {
-    //         return res.status(402).json({ error: err, success: false });
-    //     })
 }
 
 // control to save any expence detail in database

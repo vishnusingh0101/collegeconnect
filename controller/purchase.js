@@ -55,7 +55,7 @@ const ispremium = async (req, res, next) => {
     console.log(userId);
     User.findOne({ where: { id: userId } })
         .then(user => {
-            res.json({ premium: user.ispremiumuser })
+            res.json({ ispremium: user.ispremiumuser })
         })
         .catch(err => console.log(err));
 }
