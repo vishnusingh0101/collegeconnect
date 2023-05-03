@@ -3,8 +3,6 @@ const Sib = require('sib-api-v3-sdk');
 const User = require('../model/user');
 const bcrypt = require('bcrypt');
 const Forgotpassword = require('../model/password');
-const { where } = require('sequelize');
-// const Forgotpassword = require('../models/forgotpassword');
 
 const forgotpassword = async (req, res, next) => {
     try {
@@ -244,7 +242,7 @@ const resetpassword = async (req, res) => {
                         
                 </html>`);
             } else {
-                res.status(404).send('Not found');
+                res.status(404).message({message: 'Not found', status: false});
             }
         })
         .catch(error => {

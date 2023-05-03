@@ -17,25 +17,24 @@ const downloadexpence = async (req, res, next) => {
     await Report.create({link: fileURL, userId: req.user.id});
     res.status(200).json({ fileURL, success: true });
     }catch(err) {
-        console.log(err);
         res.status(500).json({fileURL:'', success: false, error: err});
-
     }
 }
 
 // control to fetch all the expence details from database
-const getexpences = (req, res, next) => {
+const getexpences = async (req, res, next) => {
     const id = req.user.id;
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.items;
-    console.log('page number ------- '+page);
     let totalItems;
-    Expence.count() 
+    try{
+        await Expence.count() 
         .then( total => {
             totalItems = total;
             return Expence.findAll(
                 {
                 where: {userId: id,},
+                order: [['createdAt', 'DESC']],
                 offset: (page-1) * ITEMS_PER_PAGE,
                 limit: ITEMS_PER_PAGE,
             });
@@ -55,9 +54,12 @@ const getexpences = (req, res, next) => {
             })
         })
         .catch(err => {
-            console.log(err);
             return res.status(402).json({error: err, success: false});
         });
+    }catch(err) {
+        res.status(500).json({message: 'server error', status: false})
+    }
+    
 }
 
 // control to save any expence detail in database
@@ -65,7 +67,6 @@ const addExpence = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
         const user = await User.findByPk(req.user.id, { transaction: t });
-        console.log('User found:', user);
         await user.update({
             totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
         });
@@ -77,11 +78,10 @@ const addExpence = async (req, res, next) => {
         }, { transaction: t });
 
         await t.commit();
-        res.status(200).json({ newExpence: data });
+        res.status(200).json({ newExpence: data, status: true });
     } catch (err) {
         await t.rollback();
-        console.log(err);
-        res.status(500).json({ error: err });
+        res.status(500).json({ error: err, status: false, message: 'server error' });
     };
 }
 
@@ -92,8 +92,8 @@ const postEditExpence = async (req, res, next) => {
     const description = req.body.description;
     const category = req.body.category;
     const uid = req.user.id;
-    console.log(expId, amount, description, category);
-    const expence = Expence.findOne({ where: { userId: uid, id: expId } }, { transaction: t });
+    try{
+        const expence = Expence.findOne({ where: { userId: uid, id: expId } }, { transaction: t });
     const user = User.findByPk(uid, { transaction: t });
     await Promise.all([expence, user])
         .then(async ([expence, user]) => {
@@ -111,12 +111,16 @@ const postEditExpence = async (req, res, next) => {
         })
         .then(result => {
             t.commit();
-            console.log('updatedProduct');
+            res.status(200).json({message: 'Updated Successfully', status: true});
         })
         .catch(err => {
-            console.log(err)
+            res.status(500).json({message: 'some error', error: err, status: false});
             t.rollback();
         });
+    }catch(err) {
+        res.status(500).json({message: 'server error', error: err, status: false});
+    }
+    
 };
 
 // control to delete any expence detail
@@ -130,17 +134,15 @@ const deleteExpence = async (req, res, next) => {
         const user = User.findByPk(uid);
         await Promise.all([expence, user])
             .then(async ([expence, user]) => {
-                console.log(expence);
-                console.log('delete successs');
                 await user.update({
                     totalExpence: sequelize.literal('`totalExpence` - ' + amount)
                 });
-                res.sendStatus(200);
+                res.status(200).json({message: 'Successfully deleted', status: true});
                 t.commit();
             })
     } catch (err) {
         t.rollback();
-        console.log(err);
+        res.status(500).json({message: 'Try again', status: false});
     }
 }
 
@@ -150,6 +152,5 @@ module.exports = {
     addExpence,
     postEditExpence,
     deleteExpence
-
 }
 

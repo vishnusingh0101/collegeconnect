@@ -19,12 +19,10 @@ const purchasepremium = async (req, res) => {
             req.user.createOrder({ orderid: order.id, status: 'PENDING' }).then(() => {
                 return res.status(201).json({ order, key_id: rzp.key_id });
             }).catch(err => {
-                console.log(err);
                 return res.status(500).json({ message: "Failed to create order in database" });
             })
         })
     } catch (err) {
-        console.log(err);
         return res.status(500).json({ message: "Something went wrong" });
     }
 }
@@ -32,9 +30,7 @@ const purchasepremium = async (req, res) => {
 const updateTransactionStatus = async (req, res) => {
     try {
         const { payment_id, order_id } = req.body;
-        console.log(payment_id, order_id);
         const order = await Order.findOne({ where: { orderid: order_id } });
-        console.log('order ' + order);
         if (!order) {
             req.user.update({ status: 'FAILED' });
             return res.status(404).json({ success: false, message: "Order Not Found" });
@@ -44,20 +40,24 @@ const updateTransactionStatus = async (req, res) => {
         await Promise.all([updatePaymentId, updatePremiumUser]).then(result => {
             return res.status(202).json({ sucess: true, message: "Transaction Successful" })
         })
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                res.status(500).json({error: err, success: false})
+            });
     } catch (err) {
-        console.log(err);
+        return res.status(500).json({ message: "Something went wrong" });
     }
 }
 
 const ispremium = async (req, res, next) => {
     const userId = req.user.id;
-    console.log(userId);
-    User.findOne({ where: { id: userId } })
+    await User.findOne({ where: { id: userId } })
         .then(user => {
             res.json({ ispremium: user.ispremiumuser })
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            return res.status(500).json({ error: err, status: false });
+        });
 }
 
 
@@ -66,17 +66,10 @@ const leaderBord = async (req, res, next) => {
         const leaderborddata = await User.findAll({
             order:[['totalExpence', 'DESC']]
         });
-        console.log(leaderborddata);
         res.status(200).json({leaderborddata});
     }catch(err) {
         res.status(500).json(err);
     }
-    // User.findAll()
-    //     .then(user => {
-    //         const userData = user.map(({ name, totalExpence }) => ({ name, totalExpence }));
-    //         res.json(userData);
-    //     })
-    //     .catch(err => console.log(err));
 }
 
 const report = async (req, res, next) => {
@@ -87,8 +80,6 @@ const report = async (req, res, next) => {
             attributes: ['link', 'createdAt'],
             order:[['createdAt', 'ASC']]
         });
-        console.log(downloadedReport);
-
         res.status(200).json({downloadedReport});
     }catch(err) {
         res.status(500).json(err);
