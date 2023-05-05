@@ -39,6 +39,10 @@ app.use('/user', dataRoute);
 app.use('/premium', premiumRoute);
 app.use('/password', passwordRoute)
 
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname), `public/frontend/${req.url}`);
+});
+
 app.use(errorControl.get404);
 
 User.hasMany(Expence);
