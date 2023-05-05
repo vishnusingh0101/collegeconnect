@@ -20,7 +20,6 @@ window.onload = async () => {
         await Promise.all([premium, exp])
             .then(([premium, exp]) => {
                 const ispremium = premium.data.ispremium;
-                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+ispremium);
                 if (ispremium === true) {
                     displayForPremium();
                 }
@@ -338,7 +337,7 @@ async function displayForPremium() {
             });
     }
     totalReport.onclick = () => {
-        window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTrackerFrontEnd/html/report.html";
+        window.location.href = "./report.html";
     }
 
 }

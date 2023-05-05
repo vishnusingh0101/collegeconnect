@@ -11,7 +11,7 @@ document.getElementById('formSubmit').onclick = async function (e) {
     document.getElementById('outputMsg').innerHTML = forgotPassword.data.message;
     setTimeout(() => {
         document.getElementById('outputMsg').innerHTML = '';
-        window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTrackerFrontEnd/html/login.html";
+        window.location.href = "./login.html";
     }, 4000);
     document.getElementById('email').value = '';
 }
