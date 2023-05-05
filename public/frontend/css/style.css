@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+.navBar {
+    display: flex;
+    margin-bottom: 5px;
+    width: 80%;
+}
+
+.pageQuantity{
+    display: flex;
+}
+
+.rzpButton {
+    position: fixed;
+    top: 1rem;
+    right: 0;
+    border: none;
+}
+
+.premiumpageBtn {
+    border: none;
+    margin-left: 5px;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+.premiumpageBtn:hover {
+    background-color: #1b981f;
+}
+
+#rzpButton {
+    margin: 7px;
+    padding: 2px;
+    border-radius: 5px;
+    background-color: rgb(255, 233, 107);
+}
+
+/* .leaderbordbtn {
+    margin-left: 5px;
+    padding: 2px;
+    border-radius: 5px;
+    background-color: rgb(46, 238, 255);
+} */
+
+.list {
+    margin-top: 2%;
+    align-items: center;
+    display: flex;
+}
+
+.title {
+    height: 5%;
+    width: 20%;
+    align-items: center;
+}
+
+.card-body {
+    padding: 2%;
+    width: 100%;
+    display: grid;
+}
+
+.row {
+    --bs-gutter-x: 1rem;
+}
+
+.card-title {
+    align-self: center;
+    font-size: x-large;
+    font-weight: bolder;
+    color: aqua;
+}
+
+.expenceList {
+    width: 100%;
+}
+
+ul {
+    padding-left: 0rem;
+}
+
+.leaderbordList {
+    margin-left: 10px;
+}
+
+.leaderbordList li, .expenceList li{
+    margin-top: 2px;
+    display: block;
+    background-color: #afafaf;
+    padding: 5px 10px;
+    font-size: medium;
+    border-radius: 5px;
+}
+
+.liBtn {
+    background-color: #ffcf3f;
+}
+
+/* pagenation */
+
+.pagination {
+    align-items: center;
+    display: flex;
+    margin-top: 2%;
+}
+
+.pagiInside {
+    margin-left: auto;
+    margin-right: auto;
+    width: 10%;
+}
+
+.pagiInside button {
+    list-style-type: none;
+    margin: 5px;
+    background-color: #c3d8dba3;
+    border-radius: 30%;
+    border: none;
+    padding: 5%;
+    font-size: larger;
+}
