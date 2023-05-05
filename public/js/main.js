@@ -20,6 +20,7 @@ window.onload = async () => {
         await Promise.all([premium, exp])
             .then(([premium, exp]) => {
                 const ispremium = premium.data.ispremium;
+                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+ispremium);
                 if (ispremium === true) {
                     displayForPremium();
                 }
