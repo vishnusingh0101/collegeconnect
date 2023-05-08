@@ -53,7 +53,7 @@ Order.belongsTo(User);
 
 User.hasMany(Forgotpassword);
 Forgotpassword.belongsTo(User);
-
+ 
 User.hasMany(Report);
 Report.belongsTo(User);
 
