@@ -16,7 +16,7 @@ async function validateUser(event) {
             console.log('ispremium>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+user.data.ispremiumuser);
             localStorage.setItem('premium', user.data.ispremium);
             if(user.data.message == "Log in Success") {
-                window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTrackerFrontEnd/html/index.html";
+                window.location.href = "../html/index.html";
             }
         }
     }catch(err){
