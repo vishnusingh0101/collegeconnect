@@ -6,12 +6,12 @@ document.getElementById('formSubmit').onclick = async function (e) {
     const obj = {
         mail
     }
-    const forgotPassword = await axios.post('http://54.206.104.57:3000/password/forgotpassword', obj);
+    const forgotPassword = await axios.post('process.env.BACKEND_API/password/forgotpassword', obj);
     console.log(forgotPassword);
     document.getElementById('outputMsg').innerHTML = forgotPassword.data.message;
     setTimeout(() => {
         document.getElementById('outputMsg').innerHTML = '';
-        window.location.href = "./login.html";
+        window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTrackerFrontEnd/html/login.html";
     }, 4000);
     document.getElementById('email').value = '';
 }
