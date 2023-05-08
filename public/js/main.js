@@ -337,7 +337,7 @@ async function displayForPremium() {
             });
     }
     totalReport.onclick = () => {
-        window.location.href = "file:///C:/Users/Vishnu/Desktop/web%20devlopment/expenceTrackerFrontEnd/html/report.html";
+        window.location.href = "../html/report.html";
     }
 
 }
