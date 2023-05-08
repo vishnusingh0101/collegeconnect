@@ -8,7 +8,7 @@ async function validateUser(event) {
         password: document.getElementById('password').value
     }
     try{
-        const user = await axios.post('http://54.206.104.57:3000/login', obj);
+        const user = await axios.post('process.env.BACKEND_API/login', obj);
 
         if(user) {
             console.log(user);

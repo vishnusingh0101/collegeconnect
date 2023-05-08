@@ -40,7 +40,7 @@ app.use('/premium', premiumRoute);
 app.use('/password', passwordRoute)
 
 app.use((req,res) => {
-    res.sendFile(join(path.__dirname), `public/${req.url}`);
+    res.sendFile(path.join(__dirname, `public/${req.url}`));
 })
 
 app.use(errorControl.get404);
