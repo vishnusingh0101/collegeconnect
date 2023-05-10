@@ -29,7 +29,6 @@ const accessLogStream = fs.createWriteStream(
 );
 
 app.use(cors());
-app.use(helmet());
 app.use(bodyParser.json({extended: false}));
 app.use(morgan('combined', {stream: accessLogStream}));
 
@@ -39,7 +38,7 @@ app.use('/premium', premiumRoute);
 app.use('/password', passwordRoute)
 
 app.use((req,res) => {
-    res.sendFile(path.join(__dirname, `/public/html${req.url}`));
+    res.sendFile(path.join(__dirname, `/public${req.url}`));
 })
 
 app.use(errorControl.get404);
