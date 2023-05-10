@@ -9,7 +9,7 @@ async function addToDatabase(event) {
     }
 
     try{
-        const user = await axios.post('http://52.62.115.119:3000/signUp', obj);
+        const user = await axios.post('http://3.104.206.49:3000/signUp', obj);
         console.log(user);
         if(user.data.message == "Successfuly create new user") {
             window.location.href = "../html/login.html";
