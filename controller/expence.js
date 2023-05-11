@@ -1,0 +1,156 @@
+const Expence = require('../model/expence');
+const User = require('../model/user');
+const sequelize = require('../util/database');
+const Userservices = require('../services/userservices');
+const S3services = require('../services/S3services');
+const Report = require('../model/report');
+
+
+
+const downloadexpence = async (req, res, next) => {
+    try{
+    const expences = await Userservices.getExpences(req);
+    const stringifedExpence = JSON.stringify(expences);
+    const userName = req.user.name;
+    const filename = `Expence_${userName} / ${new Date()}.txt`;
+    const fileURL = await S3services.uploadToS3(stringifedExpence, filename);
+    await Report.create({link: fileURL, userId: req.user.id});
+    res.status(200).json({ fileURL, success: true });
+    }catch(err) {
+        res.status(500).json({fileURL:'', success: false, error: err});
+    }
+}
+
+// control to fetch all the expence details from database
+const getexpences = async (req, res, next) => {
+    const id = req.user.id;
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.items;
+    let totalItems;
+    try{
+        await Expence.count() 
+        .then( total => {
+            totalItems = total;
+            return Expence.findAll(
+                {
+                where: {userId: id,},
+                order: [['createdAt', 'DESC']],
+                offset: (page-1) * ITEMS_PER_PAGE,
+                limit: ITEMS_PER_PAGE,
+            });
+        })
+        .then(expences => {
+            res.status(200).json({
+                expences: expences,
+                success: true,
+                pagedata: {
+                    currentPage: page,
+                    hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                    nextPage: page+1,
+                    hasPreviousPage: page > 1,
+                    previousPage: page - 1,
+                    lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
+                }
+            })
+        })
+        .catch(err => {
+            return res.status(402).json({error: err, success: false});
+        });
+    }catch(err) {
+        res.status(500).json({message: 'server error', status: false})
+    }
+    
+}
+
+// control to save any expence detail in database
+const addExpence = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+        const user = await User.findByPk(req.user.id, { transaction: t });
+        await user.update({
+            totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
+        });
+        const data = await Expence.create({
+            amount: req.body.amount,
+            description: req.body.description,
+            category: req.body.category,
+            userId: req.user.id,
+        }, { transaction: t });
+
+        await t.commit();
+        res.status(200).json({ newExpence: data, status: true });
+    } catch (err) {
+        await t.rollback();
+        res.status(500).json({ error: err, status: false, message: 'server error' });
+    };
+}
+
+const postEditExpence = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    const expId = req.body.id;
+    const amount = req.body.amount;
+    const description = req.body.description;
+    const category = req.body.category;
+    const uid = req.user.id;
+    try{
+        const expence = Expence.findOne({ where: { userId: uid, id: expId } }, { transaction: t });
+    const user = User.findByPk(uid, { transaction: t });
+    await Promise.all([expence, user])
+        .then(async ([expence, user]) => {
+            await user.update({
+                totalExpence: sequelize.literal('`totalExpence` - ' + expence.amount)
+            });
+            await user.update({
+                totalExpence: sequelize.literal('`totalExpence` + ' + amount)
+            });
+            expence.amount = amount;
+            expence.description = description;
+            expence.category = category;
+            res.status(200).json({ newExpence: expence.dataValues });
+            return expence.save();
+        })
+        .then(result => {
+            t.commit();
+            res.status(200).json({message: 'Updated Successfully', status: true});
+        })
+        .catch(err => {
+            res.status(500).json({message: 'some error', error: err, status: false});
+            t.rollback();
+        });
+    }catch(err) {
+        res.status(500).json({message: 'server error', error: err, status: false});
+    }
+    
+};
+
+// control to delete any expence detail
+const deleteExpence = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    const eId = req.params.id;
+    const amount = req.params.amount;
+    const uid = req.user.id;
+    try {
+        const expence = Expence.destroy({ where: { userId: uid, id: eId } }, { transaction: t });
+        const user = User.findByPk(uid);
+        await Promise.all([expence, user])
+            .then(async ([expence, user]) => {
+                await user.update({
+                    totalExpence: sequelize.literal('`totalExpence` - ' + amount)
+                });
+                res.status(200).json({message: 'Successfully deleted', status: true});
+                t.commit();
+            })
+    } catch (err) {
+        t.rollback();
+        res.status(500).json({message: 'Try again', status: false});
+    }
+}
+
+module.exports = {
+    downloadexpence,
+    getexpences,
+    addExpence,
+    postEditExpence,
+    deleteExpence
+}
+

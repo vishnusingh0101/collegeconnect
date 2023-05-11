@@ -8,12 +8,11 @@ async function validateUser(event) {
         password: document.getElementById('password').value
     }
     try{
-        const user = await axios.post('process.env.BACKEND_API/login', obj);
+        const user = await axios.post('http://3.104.206.49:3000/login', obj);
 
         if(user) {
             console.log(user);
             localStorage.setItem('token', user.data.token);
-            console.log('ispremium>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+user.data.ispremiumuser);
             localStorage.setItem('premium', user.data.ispremium);
             if(user.data.message == "Log in Success") {
                 window.location.href = "../html/index.html";
