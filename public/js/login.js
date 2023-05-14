@@ -20,7 +20,7 @@ async function validateUser(event) {
         }
     }catch(err){
         console.log(err);
-        output.innerText = err;
+        output.innerText = 'User Not Found';
     }
     setTimeout(()=> {
         signBody.removeChild(output);

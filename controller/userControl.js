@@ -27,8 +27,6 @@ function generateToken(id, name) {
 exports.login = async (req, res, next) => {
     const { mail, password } = req.body;
     try {
-        console.log(mail);
-        console.log(password);
         const user = await User.findAll({where: {mail: mail}});
         if(user.length > 0) {
             bcrypt.compare(password, user[0].password, (err, result) => {
