@@ -8,15 +8,21 @@ const forgotpassword = async (req, res, next) => {
     try {
         const { mail } = req.body;
 
-        const user = await User.findOne({ where: { mail } });
+        const user = await User.findOne( { mail } );
         if (user) {
             const uid = uuid.v4();
             console.log(uid);
 
-            user.createForgotpassword({ id: uid, active: true })
-                .catch(err => {
-                    throw new Error(err)
-                })
+            const forgotPassword = new Forgotpassword({ uuid: uid, active: true, userId: user._id});
+            forgotPassword.save()
+            .then(result=>{
+                console.log(result);
+            })
+            .catch(err => console.log(err));
+            // user.createForgotpassword({ id: uid, active: true })
+            //     .catch(err => {
+            //         throw new Error(err)
+            //     })
 
             const client = Sib.ApiClient.instance
             let apiKey = client.authentications['api-key']
@@ -39,7 +45,6 @@ const forgotpassword = async (req, res, next) => {
             tranEmailApi
                 .sendTransacEmail(msg)
                 .then((response) => {
-                    console.log(response);
                     return res.json({ message: 'Link to reset password sent to your mail ', sucess: true })
                 })
                 .catch((err) => {
@@ -59,13 +64,11 @@ const forgotpassword = async (req, res, next) => {
 };
 
 const resetpassword = async (req, res) => {
-    console.log('reset password>>>>>>>>>>>>>>>>>>>>');
     const id = req.params.id;
-    console.log(id);
-    console.log('its working');
 
-    Forgotpassword.findOne({ where: { id } })
+    Forgotpassword.findOne({uuid: id })
         .then(forgotpassword => {
+            console.log(forgotpassword);
             if (forgotpassword) {
                 res.status(200).send(`<html lang="en">
 
@@ -256,16 +259,19 @@ const updatepassword = async (req, res) => {
         const { newPass } = req.body;
         const uid = req.params.id;
 
-        const forgotpassword = await Forgotpassword.findOne({ where: { id: uid } });
+        const forgotpassword = await Forgotpassword.findOne({ uuid: uid } );
         console.log(forgotpassword);
         if (forgotpassword.active == true) {
-            const user = await User.findOne({ where: { id: forgotpassword.userId } });
+            const user = await User.findOne( {_id: forgotpassword.userId });
             console.log(user);
             if (user) {
                 const hash = await bcrypt.hash(newPass, 10);
-                const updpass = await user.update({ password: hash });
+                // const updpass = await user.update({ password: hash });
+                user.password = hash;
+                await user.save();
                 res.status(200).json({ message: 'Password updated Successfully' });
-                forgotpassword.update({ active: false }).catch(console.log);
+                forgotpassword.active = false;
+                forgotpassword.save().catch(err => console.log(err));
             } else {
                 res.status(400).json({ message: 'user not found' })
             }
@@ -274,6 +280,7 @@ const updatepassword = async (req, res) => {
         }
 
     } catch (error) {
+        console.log(error);
         return res.status(403).json({ error, success: false })
     }
 }

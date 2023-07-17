@@ -6,16 +6,31 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 exports.signUp = async (req, res, next) => {
-    try{
-        const { name, mail, password } = req.body;
-        console.log('name', name);
-        console.log('email ', mail);
+    try {
+        console.log('got hit-------------------');
+        const { name, mail, phone, password } = req.body;
+        const existingmail = await User.find({'mail': mail});
+        console.log(existingmail);
+        if(existingmail.length > 0) {
+            return res.status(409).json({success: false, message: "Email already exist!"});
+        }
         bcrypt.hash(password, 10, async (err, hash) => {
-            console.log(err);
-            await User.create({name, mail, password: hash});
-            res.status(201).json({message: "Successfuly create new user"});
+            const user = new User({
+                name:name,
+                mail:mail, 
+                phone:phone, 
+                password:hash
+            });
+            console.log(user);
+            user.save()
+            .then(result => {
+                console.log(result);
+            })
+            .catch(err => console.log(err));
+            return res.status(201).json({message: "Created new user"});
         })
-    }catch(err) {
+    }
+    catch(err) {
         res.status(500).json({error: err});
     }
 }
@@ -27,7 +42,8 @@ function generateToken(id, name) {
 exports.login = async (req, res, next) => {
     const { mail, password } = req.body;
     try {
-        const user = await User.findAll({where: {mail: mail}});
+        const user = await User.find({'mail': mail});
+        console.log(user);
         if(user.length > 0) {
             bcrypt.compare(password, user[0].password, (err, result) => {
                 if(err){

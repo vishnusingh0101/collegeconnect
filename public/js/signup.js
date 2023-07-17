@@ -8,19 +8,24 @@ async function addToDatabase(event) {
         password: document.getElementById('password').value
     }
 
-    try{
-        const user = await axios.post('http://3.104.206.49:3000/signUp', obj);
+    try {
+        const user = await axios.post('http://localhost:3000/signUp', obj);
         console.log(user);
-        if(user.data.message == "Successfuly create new user") {
+        if (user.data.message == "Created new user") {
             window.location.href = "../html/login.html";
         }
-        }catch(err) {
+    } catch (err) {
         console.log(err);
-        output.innerText = err;
+        console.log(output);
+        if (output) {
+            output.innerText = err.response.data.message;
+        }
     };
-    console.log(output);
-    setTimeout(()=> {
-        signBody.removeChild(output);
+    setTimeout(() => {
+        console.log(output);
+        if(output){
+            signBody.removeChild(output);
+        }
     }, 5000);
     document.getElementById('userName').value = "";
     document.getElementById('email').value = "";
