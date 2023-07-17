@@ -8,7 +8,7 @@ async function validateUser(event) {
         password: document.getElementById('password').value
     }
     try{
-        const user = await axios.post('http://3.104.206.49:3000/login', obj);
+        const user = await axios.post('http://localhost:3000/login', obj);
 
         if(user) {
             console.log(user);
@@ -20,7 +20,9 @@ async function validateUser(event) {
         }
     }catch(err){
         console.log(err);
-        output.innerText = err;
+        if(output) {
+            output.innerText = 'User Not Found';
+        }
     }
     setTimeout(()=> {
         signBody.removeChild(output);

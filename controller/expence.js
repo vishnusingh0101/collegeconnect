@@ -1,6 +1,6 @@
 const Expence = require('../model/expence');
 const User = require('../model/user');
-const sequelize = require('../util/database');
+const mongoose = require('mongoose');
 const Userservices = require('../services/userservices');
 const S3services = require('../services/S3services');
 const Report = require('../model/report');
@@ -8,141 +8,134 @@ const Report = require('../model/report');
 
 
 const downloadexpence = async (req, res, next) => {
-    try{
-    const expences = await Userservices.getExpences(req);
-    const stringifedExpence = JSON.stringify(expences);
-    const userName = req.user.name;
-    const filename = `Expence_${userName} / ${new Date()}.txt`;
-    const fileURL = await S3services.uploadToS3(stringifedExpence, filename);
-    await Report.create({link: fileURL, userId: req.user.id});
-    res.status(200).json({ fileURL, success: true });
-    }catch(err) {
-        res.status(500).json({fileURL:'', success: false, error: err});
+    try {
+        const expences = await Expence.find({userId: req.user._id});
+        const stringifedExpence = JSON.stringify(expences);
+        const userName = req.user.name;
+        const filename = `Expence_${userName} / ${new Date()}.txt`;
+        const fileURL = await S3services.uploadToS3(stringifedExpence, filename);
+        new Report({ link: fileURL, userId: req.user.id });
+        res.status(200).json({ fileURL, success: true });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ fileURL: '', success: false, error: err });
     }
 }
 
 // control to fetch all the expence details from database
 const getexpences = async (req, res, next) => {
-    const id = req.user.id;
+    const userId = req.user.id;
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.items;
     let totalItems;
-    try{
-        await Expence.count() 
-        .then( total => {
-            totalItems = total;
-            return Expence.findAll(
-                {
-                where: {userId: id,},
-                order: [['createdAt', 'DESC']],
-                offset: (page-1) * ITEMS_PER_PAGE,
-                limit: ITEMS_PER_PAGE,
-            });
+    try {
+        totalItems = await Expence.count({ userId });
+        const expences = await Expence.find({ userId })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+
+        res.status(200).json({
+            expences,
+            success: true,
+            pagedata: {
+                currentPage: page,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                nextPage: page + 1,
+                hasPreviousPage: page > 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
+            }
         })
-        .then(expences => {
-            res.status(200).json({
-                expences: expences,
-                success: true,
-                pagedata: {
-                    currentPage: page,
-                    hasNextPage: ITEMS_PER_PAGE * page < totalItems,
-                    nextPage: page+1,
-                    hasPreviousPage: page > 1,
-                    previousPage: page - 1,
-                    lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
-                }
-            })
-        })
-        .catch(err => {
-            return res.status(402).json({error: err, success: false});
-        });
-    }catch(err) {
-        res.status(500).json({message: 'server error', status: false})
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'server error', status: false })
     }
-    
+
 }
 
 // control to save any expence detail in database
 const addExpence = async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
-        const user = await User.findByPk(req.user.id, { transaction: t });
-        await user.update({
-            totalExpence: sequelize.literal('`totalExpence` + ' + req.body.amount)
-        });
-        const data = await Expence.create({
-            amount: req.body.amount,
-            description: req.body.description,
-            category: req.body.category,
-            userId: req.user.id,
-        }, { transaction: t });
-
-        await t.commit();
-        res.status(200).json({ newExpence: data, status: true });
+        console.log('got hit');
+        const user = await User.findById({ _id: req.user.id });
+        const amount = parseInt(req.body.amount);
+        user.totalExpence += amount;
+        console.log(user.totalExpence);
+        user.save().then(result => {
+            console.log(result);
+            const data = new Expence({
+                amount: req.body.amount,
+                description: req.body.description,
+                category: req.body.category,
+                userId: req.user.id,
+            });
+            data.save()
+            .then(result=>{
+                res.status(200).json({ newExpence: result, status: true });
+            })
+        })
     } catch (err) {
-        await t.rollback();
         res.status(500).json({ error: err, status: false, message: 'server error' });
     };
 }
 
 const postEditExpence = async (req, res, next) => {
-    const t = await sequelize.transaction();
     const expId = req.body.id;
-    const amount = req.body.amount;
+    const amount = parseInt(req.body.amount);
     const description = req.body.description;
     const category = req.body.category;
-    const uid = req.user.id;
-    try{
-        const expence = Expence.findOne({ where: { userId: uid, id: expId } }, { transaction: t });
-    const user = User.findByPk(uid, { transaction: t });
+    const userId = req.user.id;
+    const expence = Expence.find({ userId: userId, _id: expId });
+    const user = User.findById({ _id: userId });
     await Promise.all([expence, user])
-        .then(async ([expence, user]) => {
-            await user.update({
-                totalExpence: sequelize.literal('`totalExpence` - ' + expence.amount)
-            });
-            await user.update({
-                totalExpence: sequelize.literal('`totalExpence` + ' + amount)
-            });
-            expence.amount = amount;
-            expence.description = description;
-            expence.category = category;
-            res.status(200).json({ newExpence: expence.dataValues });
-            return expence.save();
+        .then(async ([expences, user]) => {
+            const expence = expences[0];
+            user.totalExpence = (user.totalExpence - expence.amount) + amount;
+            user.save()
+                .then(() => {
+                    expence.amount = amount;
+                    expence.description = description;
+                    expence.category = category;
+                    return expence.save();
+                })
         })
         .then(result => {
-            t.commit();
-            res.status(200).json({message: 'Updated Successfully', status: true});
+            console.log(result);
+            res.status(200).json({ newExpence: result, message: 'Updated Successfully', status: true });
         })
         .catch(err => {
-            res.status(500).json({message: 'some error', error: err, status: false});
-            t.rollback();
+            console.log(err);
+            res.status(500).json({ message: 'some error', error: err, status: false });
         });
-    }catch(err) {
-        res.status(500).json({message: 'server error', error: err, status: false});
-    }
-    
+
 };
 
 // control to delete any expence detail
 const deleteExpence = async (req, res, next) => {
-    const t = await sequelize.transaction();
-    const eId = req.params.id;
-    const amount = req.params.amount;
-    const uid = req.user.id;
+    // const t = await sequelize.transaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const expenceId = req.params.id;
+    const amount = parseInt(req.params.amount);
+    const userId = req.user.id;
     try {
-        const expence = Expence.destroy({ where: { userId: uid, id: eId } }, { transaction: t });
-        const user = User.findByPk(uid);
+        const expence = Expence.findByIdAndRemove({userId, _id: expenceId});
+        const user = User.findById({_id:userId});
         await Promise.all([expence, user])
             .then(async ([expence, user]) => {
-                await user.update({
-                    totalExpence: sequelize.literal('`totalExpence` - ' + amount)
-                });
-                res.status(200).json({message: 'Successfully deleted', status: true});
-                t.commit();
+                user.totalExpence -= amount;  
+                user.save();
+                res.status(200).json({ message: 'Successfully deleted', status: true });
+                await session.commitTransaction();
+                session.endSession();
             })
     } catch (err) {
-        t.rollback();
-        res.status(500).json({message: 'Try again', status: false});
+        console.log(err);
+        await session.abortTransaction();
+        session.endSession();
+        res.status(500).json({ message: 'Try again', status: false });
     }
 }
 

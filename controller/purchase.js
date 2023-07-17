@@ -14,13 +14,23 @@ const purchasepremium = async (req, res) => {
 
         rzp.orders.create({ amount, currency: "INR" }, (err, order) => {
             if (err) {
+                console.log(err);
                 throw new Error(JSON.stringify(err));
             }
-            req.user.createOrder({ orderid: order.id, status: 'PENDING' }).then(() => {
-                return res.status(201).json({ order, key_id: rzp.key_id });
-            }).catch(err => {
-                return res.status(500).json({ message: "Failed to create order in database" });
-            })
+            // req.user.createOrder({ orderid: order.id, status: 'PENDING' }).then(() => {
+            //     return res.status(201).json({ order, key_id: rzp.key_id });
+            // })
+            const neworder = new Order({ orderid: order.id, status: 'PENDING', paymentid: null });
+            neworder.save()
+                .then(result => {
+                    console.log(result);
+                    return res.status(201).json({ order, key_id: rzp.key_id });
+                })
+                .catch(err => {
+                    console.log('got hit err');
+                    console.log(err);
+                    return res.status(500).json({ message: "Failed to create order in database" });
+                })
         })
     } catch (err) {
         return res.status(500).json({ message: "Something went wrong" });
@@ -30,28 +40,34 @@ const purchasepremium = async (req, res) => {
 const updateTransactionStatus = async (req, res) => {
     try {
         const { payment_id, order_id } = req.body;
-        const order = await Order.findOne({ where: { orderid: order_id } });
+        const order = await Order.findOne({ orderid: order_id });
+        console.log(order);
+
         if (!order) {
-            req.user.update({ status: 'FAILED' });
+            order.status = 'FAILED';
+            await order.save();
             return res.status(404).json({ success: false, message: "Order Not Found" });
         }
-        const updatePaymentId = order.update({ paymentid: payment_id, status: 'SUCCESSFUL' });
-        const updatePremiumUser = req.user.update({ ispremiumuser: true });
-        await Promise.all([updatePaymentId, updatePremiumUser]).then(result => {
-            return res.status(202).json({ sucess: true, message: "Transaction Successful" })
-        })
-            .catch(err => {
-                console.log(err);
-                res.status(500).json({error: err, success: false})
-            });
+
+        order.paymentid = payment_id;
+        order.status = 'SUCCESSFUL';
+        await order.save();
+
+        const user = await User.findById(req.user._id);
+        user.ispremiumuser = true;
+        await user.save();
+
+        return res.status(202).json({ success: true, message: "Transaction Successful" });
     } catch (err) {
-        return res.status(500).json({ message: "Something went wrong" });
+        console.log(err);
+        return res.status(500).json({ message: "Something went wrong", success: false });
     }
-}
+};
 
 const ispremium = async (req, res, next) => {
     const userId = req.user.id;
-    await User.findOne({ where: { id: userId } })
+    console.log(userId);
+    await User.find({ userId })
         .then(user => {
             res.json({ ispremium: user.ispremiumuser })
         })
@@ -62,26 +78,28 @@ const ispremium = async (req, res, next) => {
 
 
 const leaderBord = async (req, res, next) => {
-    try{
-        const leaderborddata = await User.findAll({
-            order:[['totalExpence', 'DESC']]
-        });
-        res.status(200).json({leaderborddata});
-    }catch(err) {
+    try {
+        const leaderborddata = await User.find()
+        .sort({'totalExpence': -1});
+        res.status(200).json({ leaderborddata });
+    } catch (err) {
         res.status(500).json(err);
     }
 }
 
 const report = async (req, res, next) => {
-    try{
+    try {
         const userId = req.user.id;
-        const downloadedReport = await Report.findAll({
-            where: {userId},
-            attributes: ['link', 'createdAt'],
-            order:[['createdAt', 'ASC']]
-        });
-        res.status(200).json({downloadedReport});
-    }catch(err) {
+        const downloadedReport = await Report.find({userId: userId})
+        .select("link createdAt")
+        .sort({'createdAt': 1});
+            // {
+            // where: { userId },
+            // attributes: ['link', 'createdAt'],
+            // order: [['createdAt', 'ASC']]}
+        res.status(200).json({ downloadedReport });
+    } catch (err) {
+        console.log(err);
         res.status(500).json(err);
     }
 }

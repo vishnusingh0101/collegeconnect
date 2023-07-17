@@ -1,10 +1,10 @@
 window.onload = async () => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.get('http://3.104.206.49:3000/premium/report', { headers: { "Authorization": token } });
+        const response = await axios.get('http://localhost:3000/premium/report', { headers: { "Authorization": token } });
         const reports = response.data.downloadedReport;
         console.log(reports);
-        for(report of reports) {
+        for(let report of reports) {
             setValueInUi(report);
         }
     } catch (err) {
