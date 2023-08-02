@@ -1,7 +1,7 @@
 window.onload = async () => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.get('http://localhost:3000/premium/report', { headers: { "Authorization": token } });
+        const response = await axios.get('http://3.25.81.222:3000/premium/report', { headers: { "Authorization": token } });
         const reports = response.data.downloadedReport;
         console.log(reports);
         for(let report of reports) {

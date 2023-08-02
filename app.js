@@ -5,11 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-
+require('dotenv').config();
 
 const app = express();
-
-// const sequelize = require('./util/database');
 
 const errorControl = require('./controller/error');
 
@@ -17,12 +15,6 @@ const userRoute = require('./routes/user');
 const dataRoute = require('./routes/expence');
 const premiumRoute = require('./routes/premium');
 const passwordRoute = require('./routes/password');
-
-// const Expence = require('./model/expence');
-// const User = require('./model/user');
-// const Order = require('./model/orders');
-// const Report = require('./model/report');
-// const Forgotpassword = require('./model/password');
 
 const accessLogStream = fs.createWriteStream(
     path.join(__dirname, 'access.log'),
@@ -39,33 +31,13 @@ app.use('/premium', premiumRoute);
 app.use('/password', passwordRoute);
 
 app.use((req,res) => {
-    console.log(req.url);
     res.sendFile(path.join(__dirname, `/public${req.url}`));
 })
 
 app.use(errorControl.get404);
 
-mongoose.connect('mongodb+srv://vishnu:vishnu836921@cluster0.axx85zr.mongodb.net/test?retryWrites=true')
+mongoose.connect(process.env.MONGODB)
     .then(result => {
         app.listen(3000);
     })
     .catch(err => console.log(err));
-
-
-// User.hasMany(Expence);
-// Expence.belongsTo(User);
-
-// User.hasMany(Order);
-// Order.belongsTo(User);
-
-// User.hasMany(Forgotpassword);
-// Forgotpassword.belongsTo(User);
- 
-// User.hasMany(Report);
-// Report.belongsTo(User);
-
-// sequelize.sync()
-// .then(result => {
-//     app.listen(3000);
-// })
-// .catch(err => console.log(err));

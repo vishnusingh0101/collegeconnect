@@ -6,7 +6,7 @@ document.getElementById('formSubmit').onclick = async function (e) {
     const obj = {
         mail
     }
-    const forgotPassword = await axios.post('http://localhost:3000/password/forgotpassword', obj);
+    const forgotPassword = await axios.post('http://3.25.81.222:3000/password/forgotpassword', obj);
     console.log(forgotPassword);
     document.getElementById('outputMsg').innerHTML = forgotPassword.data.message;
     setTimeout(() => {

@@ -9,6 +9,10 @@ const reportSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'users'
+    },
+    createdAt: {
+        type: String,
+        
     }
 })
 
