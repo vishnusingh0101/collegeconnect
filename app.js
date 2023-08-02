@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-
+require('dotenv').config();
 
 const app = express();
 
@@ -36,7 +36,7 @@ app.use((req,res) => {
 
 app.use(errorControl.get404);
 
-mongoose.connect('mongodb+srv://vishnu:vishnu836921@cluster0.axx85zr.mongodb.net/test?retryWrites=true')
+mongoose.connect(process.env.MONGODB)
     .then(result => {
         app.listen(3000);
     })
