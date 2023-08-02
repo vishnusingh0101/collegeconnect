@@ -4,17 +4,19 @@ const mongoose = require('mongoose');
 const Userservices = require('../services/userservices');
 const S3services = require('../services/S3services');
 const Report = require('../model/report');
-
+const date = new Date();
 
 
 const downloadexpence = async (req, res, next) => {
     try {
+        const curdate = date.getDate()+'/'+date.getMonth()+'/'+date.getFullYear();
         const expences = await Expence.find({userId: req.user._id});
         const stringifedExpence = JSON.stringify(expences);
         const userName = req.user.name;
         const filename = `Expence_${userName} / ${new Date()}.txt`;
         const fileURL = await S3services.uploadToS3(stringifedExpence, filename);
-        new Report({ link: fileURL, userId: req.user.id });
+        const repo = new Report({ link: fileURL, userId: req.user.id, createdAt: curdate });
+        repo.save();
         res.status(200).json({ fileURL, success: true });
     } catch (err) {
         console.log(err);
@@ -57,20 +59,17 @@ const getexpences = async (req, res, next) => {
 // control to save any expence detail in database
 const addExpence = async (req, res, next) => {
     try {
-        console.log('got hit');
         const user = await User.findById({ _id: req.user.id });
         const amount = parseInt(req.body.amount);
         user.totalExpence += amount;
-        console.log(user.totalExpence);
         user.save().then(result => {
-            console.log(result);
-            const data = new Expence({
+            const expence = new Expence({
                 amount: req.body.amount,
                 description: req.body.description,
                 category: req.body.category,
                 userId: req.user.id,
             });
-            data.save()
+            expence.save()
             .then(result=>{
                 res.status(200).json({ newExpence: result, status: true });
             })

@@ -7,7 +7,6 @@ require('dotenv').config();
 
 exports.signUp = async (req, res, next) => {
     try {
-        console.log('got hit-------------------');
         const { name, mail, phone, password } = req.body;
         const existingmail = await User.find({'mail': mail});
         console.log(existingmail);

@@ -66,9 +66,9 @@ const updateTransactionStatus = async (req, res) => {
 
 const ispremium = async (req, res, next) => {
     const userId = req.user.id;
-    console.log(userId);
-    await User.find({ userId })
+    await User.findOne({ _id: userId })
         .then(user => {
+            console.log(user.ispremiumuser);
             res.json({ ispremium: user.ispremiumuser })
         })
         .catch(err => {

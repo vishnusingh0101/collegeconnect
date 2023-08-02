@@ -39,7 +39,7 @@ const forgotpassword = async (req, res, next) => {
                 to: recievers,
                 subject: 'Reset Password',
                 textContent: 'and easy to do anywhere, even with Node.js',
-                htmlContent: `<a href="http://localhost:3000/password/resetpassword/${uid}"><button color="blue" border-radius="5px">Reset password</button></a>`,
+                htmlContent: `<a href="http://3.25.81.222:3000/password/resetpassword/${uid}"><button color="blue" border-radius="5px">Reset password</button></a>`,
             }
 
             tranEmailApi
@@ -231,7 +231,7 @@ const resetpassword = async (req, res) => {
                                         newPass
                                     }
                                     console.log(obj);
-                                    const updatepassword = await axios.post('http://localhost:3000/password/updatepassword/${id}', obj);
+                                    const updatepassword = await axios.post('http://3.25.81.222:3000/password/updatepassword/${id}', obj);
                                     console.log(updatepassword);
                                     document.getElementById('outputMsg').innerHTML = updatepassword.data.message;
                                     setTimeout(() => {

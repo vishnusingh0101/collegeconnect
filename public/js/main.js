@@ -14,8 +14,8 @@ window.onload = async () => {
             dropdown.value = selectedValue;
         }
         const quantity = selectedValue;
-        const premium = axios.get('http://localhost:3000/premium/ispremium', { headers: { "Authorization": token } });
-        const exp = axios.get(`http://localhost:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
+        const premium = axios.get('http://3.25.81.222:3000/premium/ispremium', { headers: { "Authorization": token } });
+        const exp = axios.get(`http://3.25.81.222:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
 
         await Promise.all([premium, exp])
             .then(([premium, exp]) => {
@@ -39,7 +39,6 @@ window.onload = async () => {
             })
             .catch(err => console.log(err));
 
-
     } catch (err) {
         console.log(err);
     };
@@ -56,13 +55,12 @@ async function saveToLocal(event) {
         description,
         category
     }
-    const exp = await axios.post('http://localhost:3000/user/addExpence', obj, { headers: { "Authorization": token } });
+    const exp = await axios.post('http://3.25.81.222:3000/user/addExpence', obj, { headers: { "Authorization": token } });
     console.log(exp);
     try {
         const id = exp.data._id;
         if (numOfExp > 5) {
             let li = document.getElementsByTagName('li');
-            console.log(li);
             expList.removeChild(li[li.length-1]);
         }
         setValueInUi(obj, id);
@@ -74,7 +72,6 @@ async function saveToLocal(event) {
 
 let numOfExp = 0;
 function setValueInUi(obj, id) {
-    console.log(id, 'inui');
     numOfExp++;
     var expList = document.getElementById('expList');
 
@@ -99,7 +96,7 @@ function setValueInUi(obj, id) {
     //delete onclick function
     del.onclick = () => {
         const token = localStorage.getItem('token');
-        const exp = axios.delete('http://localhost:3000/user/delete/' + id + '/' + obj.amount, { headers: { "Authorization": token } });
+        const exp = axios.delete('http://3.25.81.222:3000/user/delete/' + id + '/' + obj.amount, { headers: { "Authorization": token } });
         try {
             console.log(exp);
             expList.removeChild(li);
@@ -134,7 +131,7 @@ function setValueInUi(obj, id) {
                     category
                 }
                 console.log(newObj);
-                const exp = axios.post('http://localhost:3000/user/edit', newObj, { headers: { "Authorization": token } });
+                const exp = axios.post('http://3.25.81.222:3000/user/edit', newObj, { headers: { "Authorization": token } });
                 try {
                     console.log(exp);
                     expList.removeChild(li);
@@ -198,7 +195,7 @@ async function getProducts(page) {
     const token = localStorage.getItem('token');
     const quantity = document.getElementById('quantity').value;
     try {
-        const exp = await axios.get(`http://localhost:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
+        const exp = await axios.get(`http://3.25.81.222:3000/user/allExpence?page=${page}&items=${quantity}`, { headers: { "Authorization": token } });
         if (exp.data.success == true) {
             document.getElementById('expList').innerHTML = '';
             const allExpence = exp.data.expences;
@@ -219,13 +216,13 @@ async function getProducts(page) {
 
 document.getElementById('rzpButton').onclick = async function (e) {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3000/premium/premiummembership', { headers: { "Authorization": token } });
+    const response = await axios.get('http://3.25.81.222:3000/premium/premiummembership', { headers: { "Authorization": token } });
     console.log(response);
     var options = {
         "key": response.data.key_id,
         "order_id": response.data.order.id,
         "handler": async function (response) {
-            await axios.post('http://localhost:3000/premium/updateTransactionStatus', {
+            await axios.post('http://3.25.81.222:3000/premium/updateTransactionStatus', {
                 payment_id: response.razorpay_payment_id,
                 order_id: options.order_id,
             }, { headers: { "Authorization": token } })
@@ -282,7 +279,7 @@ async function displayForPremium() {
             e.preventDefault();
             let leaderBordList = document.getElementById('leaderbord');
 
-            const getUser = await axios.get('http://localhost:3000/premium/showleaderbord');
+            const getUser = await axios.get('http://3.25.81.222:3000/premium/showleaderbord');
             try {
                 const users = getUser.data.leaderborddata;
 
@@ -319,7 +316,7 @@ async function displayForPremium() {
     downloadexpence.onclick = async () => {
         const token = localStorage.getItem('token');
         console.log(token);
-        axios.get('http://localhost:3000/user/download', { headers: { "Authorization": token } })
+        axios.get('http://3.25.81.222:3000/user/download', { headers: { "Authorization": token } })
             .then((response) => {
                 console.log(response);
                 if (response.status === 200) {
