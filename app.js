@@ -12,8 +12,6 @@ const app = express();
 const errorControl = require('./controller/error');
 
 const userRoute = require('./routes/user');
-const dataRoute = require('./routes/expence');
-const premiumRoute = require('./routes/premium');
 const passwordRoute = require('./routes/password');
 
 const accessLogStream = fs.createWriteStream(
@@ -25,9 +23,7 @@ app.use(cors());
 app.use(bodyParser.json({extended: false}));
 app.use(morgan('combined', {stream: accessLogStream}));
 
-app.use(userRoute);
-app.use('/user', dataRoute);
-app.use('/premium', premiumRoute);
+app.use('/user', userRoute);
 app.use('/password', passwordRoute);
 
 app.use((req,res) => {
