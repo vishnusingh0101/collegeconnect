@@ -35,11 +35,12 @@ exports.signUp = async (req, res) => {
         });
 
         await newUser.save();
+        
 
         //Send verification email
-        sendVerificationEmail(newUser.mail, verificationToken);
-
+        // sendVerificationEmail(newUser.mail, verificationToken);
         return res.status(201).json({
+           
             success: true,
             message: "User registered successfully! Please verify your email."
         });
