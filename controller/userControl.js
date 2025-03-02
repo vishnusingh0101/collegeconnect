@@ -6,9 +6,9 @@ const crypto = require('crypto');
 
 exports.signUp = async (req, res) => {
     try {
-        const { name, mail, mobile, password, registeras, joinas } = req.body;
+        const { name, mail, mobile, password } = req.body;
 
-        if (!name || !mail || !mobile || !password || !registeras || !joinas) {
+        if (!name || !mail || !mobile || !password) {
             return res.status(400).json({ success: false, message: "All fields are required!" });
         }
 
@@ -28,8 +28,6 @@ exports.signUp = async (req, res) => {
             mail: mail.trim(),
             mobile: mobile.trim(),
             password: hashedPassword,
-            registeras: registeras.trim(),
-            joinas: joinas.trim(),
             collegeid: null,
             emailIsVerified: false, 
             emailVerificationToken,

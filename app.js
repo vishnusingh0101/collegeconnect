@@ -14,6 +14,7 @@ const errorControl = require('./controller/error');
 const userRoute = require('./routes/user');
 const passwordRoute = require('./routes/password');
 
+console.log("starting App");
 const accessLogStream = fs.createWriteStream(
     path.join(__dirname, 'access.log'),
     {flags: 'a'}
@@ -34,6 +35,7 @@ app.use(errorControl.get404);
 
 mongoose.connect(process.env.MONGODB)
     .then(result => {
+        console.log("Database Connected");
         app.listen(3000);
     })
     .catch(err => console.log(err));
