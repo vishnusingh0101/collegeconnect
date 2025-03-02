@@ -21,6 +21,11 @@ const accessLogStream = fs.createWriteStream(
 );
 
 app.use(cors());
+
+app.use((req,res) => {
+    console.log(req.url);
+});
+
 app.use(bodyParser.json({extended: false}));
 app.use(morgan('combined', {stream: accessLogStream}));
 
