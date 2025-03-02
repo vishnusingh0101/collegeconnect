@@ -8,7 +8,7 @@ exports.signUp = async (req, res) => {
     try {
         const { name, mail, mobile, password } = req.body;
 
-        if (!name || !mail || !mobile || !password) {
+        if (!name  || !mobile || !password) {
             return res.status(400).json({ success: false, message: "All fields are required!" });
         }
 
@@ -25,12 +25,9 @@ exports.signUp = async (req, res) => {
         // Create new user
         const newUser = new User({
             name: name.trim(),
-            mail: mail.trim(),
             mobile: mobile.trim(),
             password: hashedPassword,
             collegeid: null,
-            emailIsVerified: false, 
-            emailVerificationToken,
             phoneIsVerified: false
         });
 
