@@ -10,37 +10,52 @@ require('dotenv').config();
 const app = express();
 
 const errorControl = require('./controller/error');
+const uploadData = require('./controller/uploaddata');
 
 const userRoute = require('./routes/user');
 const passwordRoute = require('./routes/password');
+const collegeRoute = require('./routes/colleges'); 
+// const uploadRoutes = require('./routes/uploadData'); 
 
-console.log("starting App");
-const accessLogStream = fs.createWriteStream(
-    path.join(__dirname, 'access.log'),
-    {flags: 'a'}
-);
+console.log("Starting App");
 
-app.use(cors());
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 
-app.use((req,res) => {
-    console.log(req.url);
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url} - Body:`, req.body);
+    next();
 });
 
-app.use(bodyParser.json({extended: false}));
-app.use(morgan('combined', {stream: accessLogStream}));
+app.use(cors());
+app.use(bodyParser.json({ extended: false }));
+app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use('/user', userRoute);
 app.use('/password', passwordRoute);
+app.use('/college', collegeRoute);
+// app.use('/upload', uploadRoutes);
 
-app.use((req,res) => {
-    res.sendFile(path.join(__dirname, `/public${req.url}`));
-})
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(errorControl.get404);
 
-mongoose.connect(process.env.MONGODB)
-    .then(result => {
+const startServer = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+
         console.log("Database Connected");
-        app.listen(3000);
-    })
-    .catch(err => console.log(err));
+
+        await uploadData.uploadColleges();
+
+        app.listen(3000, () => {
+            console.log("Server is running on port 3000");
+        });
+    } catch (err) {
+        console.error("Database Connection Error:", err);
+    }
+};
+
+startServer();
