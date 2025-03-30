@@ -23,15 +23,39 @@ const generateToken = (id, name) => {
 };
 
 // Send OTP using MSG91
+// const sendOTP = async (phone, otp) => {
+//     try {
+//         const response = await axios.post('https://control.msg91.com/api/v5/otp', {
+//             authkey: MSG91_AUTH_KEY,
+//             mobile: `91${phone}`,
+//             otp: otp,
+//             sender: MSG91_SENDER_ID,
+//             template_id: MSG91_TEMPLATE_ID
+//         });
+//         return response.data;
+//     } catch (error) {
+//         console.error("Error sending OTP:", error.response?.data || error.message);
+//         throw new Error("Failed to send OTP");
+//     }
+// };
+
 const sendOTP = async (phone, otp) => {
     try {
-        const response = await axios.post('https://control.msg91.com/api/v5/otp', {
-            authkey: MSG91_AUTH_KEY,
-            mobile: `91${phone}`,
-            otp: otp,
-            sender: MSG91_SENDER_ID,
-            template_id: MSG91_TEMPLATE_ID
-        });
+        const response = await axios.post('https://control.msg91.com/api/v5/otp', 
+            {
+                mobile: `91${phone}`,
+                otp: otp,
+                sender: MSG91_SENDER_ID, 
+                template_id: MSG91_TEMPLATE_ID
+            }, 
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authkey': MSG91_AUTH_KEY 
+                }
+            }
+        );
+
         return response.data;
     } catch (error) {
         console.error("Error sending OTP:", error.response?.data || error.message);
