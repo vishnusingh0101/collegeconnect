@@ -14,7 +14,7 @@ const uploadData = require('./controller/uploaddata');
 
 const userRoute = require('./routes/user');
 const passwordRoute = require('./routes/password');
-const collegeRoute = require('./routes/colleges'); 
+const collegeRoute = require('./routes/getdata'); 
 // const uploadRoutes = require('./routes/uploadData'); 
 
 console.log("Starting App");
@@ -47,8 +47,7 @@ const startServer = async () => {
         });
 
         console.log("Database Connected");
-
-        await uploadData.uploadColleges();
+        await uploadData.uploadAllData();
 
         app.listen(3000, () => {
             console.log("Server is running on port 3000");

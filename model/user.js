@@ -118,7 +118,11 @@ const userSchema = new Schema({
             default: 0,
             min: 0
         }
-    }
+    },
+    scheduledCalls: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'ScheduleCall'
+    }]
 });
 
 module.exports = mongoose.model('users', userSchema);

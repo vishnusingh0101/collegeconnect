@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const Colleges = require('../model/colleges');
+const Colleges = require('../model/collegeslist');
+const Students = require('../model/studentlist');
+const Alumni = require('../model/alumnilist');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,7 +14,9 @@ const readJSONFile = (filePath) => {
 };
 
 const filePaths = {
-    colleges: path.join(__dirname, '../alldata/colleges.json'),
+    colleges: path.join(__dirname, '../alldata/CData.json'),
+    students: path.join(__dirname, '../alldata/StudentData.json'),
+    alumni: path.join(__dirname, '../alldata/AlumniData.json'),
 };
 
 // Function to backup and delete existing data
@@ -37,7 +41,7 @@ const backupAndDeleteExistingData = async (Model, collectionName) => {
     }
 };
 
-//Function to upload new JSON data
+// Function to upload new JSON data
 const uploadData = async (Model, filePath, dataType, collectionName) => {
     try {
         await backupAndDeleteExistingData(Model, collectionName);
@@ -52,18 +56,18 @@ const uploadData = async (Model, filePath, dataType, collectionName) => {
     }
 };
 
-// Modified function to work with both API and startup execution
-exports.uploadColleges = async (req, res) => {
+// Function to upload all data (Colleges, Students, Alumni)
+exports.uploadAllData = async (req, res) => {
     try {
         await uploadData(Colleges, filePaths.colleges, "Colleges", "colleges");
+        await uploadData(Students, filePaths.students, "Students", "students");
+        await uploadData(Alumni, filePaths.alumni, "Alumni", "alumni");
 
-        // If `res` exists (API Call), send JSON response
         if (res) {
-            return res.status(201).json({ message: "Colleges data uploaded successfully!" });
+            return res.status(201).json({ message: "All data uploaded successfully!" });
         }
     } catch (error) {
-        console.error("Error in uploadColleges:", error);
-        
+        console.error("Error in uploadAllData:", error);
         if (res) {
             return res.status(500).json({ message: "Error uploading data", error });
         }

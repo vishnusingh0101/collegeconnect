@@ -1,6 +1,11 @@
 const User = require('../model/user');
+const ScheduleCall = require('../model/ScheduleCall');
+const Student = require('../model/studentlist');
+const Alumni = require('../model/alumnilist');
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 require('dotenv').config();
 const axios = require('axios');
 
@@ -184,5 +189,68 @@ exports.login = async (req, res) => {
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+exports.scheduleCall = async (req, res) => {
+    try {
+        const { userId, participantId, participantType, date, time, duration } = req.body;
+
+        // Validate duration (only 15 min, 30 min, or 1 hour allowed)
+        const allowedDurations = [15, 30, 60];
+        if (!allowedDurations.includes(duration)) {
+            return res.status(400).json({ message: "Invalid duration. Allowed: 15, 30, 60 minutes." });
+        }
+
+        // Validate participant type
+        if (!["student", "alumni"].includes(participantType)) {
+            return res.status(400).json({ message: "Invalid participant type. Use 'student' or 'alumni'." });
+        }
+
+        // Ensure participant exists
+        const participantModel = participantType === "student" ? Student : Alumni;
+        const participant = await participantModel.findById(participantId);
+        if (!participant) {
+            return res.status(404).json({ message: `${participantType} not found.` });
+        }
+
+        // Ensure user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check if the user or participant has an overlapping call
+        const existingCall = await ScheduleCall.findOne({
+            $or: [{ userId }, { participantId }],
+            date,
+            time,
+        });
+
+        if (existingCall) {
+            return res.status(400).json({ message: "User or participant already has a call at this time." });
+        }
+
+        // Create new scheduled call
+        const newCall = new ScheduleCall({
+            userId,
+            participantId,
+            participantType,
+            date,
+            time,
+            duration,
+            status: "scheduled"
+        });
+
+        await newCall.save();
+
+        // Save call reference in User model
+        user.scheduledCalls.push(newCall._id);
+        await user.save();
+
+        res.status(201).json({ message: "Call scheduled successfully!", call: newCall });
+    } catch (error) {
+        console.error("Error scheduling call:", error);
+        res.status(500).json({ message: "Internal server error", error });
     }
 };
