@@ -85,7 +85,6 @@ exports.signUp = async (req, res) => {
 
         const newUser = new User({
             name: name.trim(),
-            mail: mail ? mail.trim() : null,
             phone: phone.trim(),
             password: hashedPassword,
             phoneIsVerified: false,
