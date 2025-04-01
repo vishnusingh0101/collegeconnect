@@ -15,4 +15,8 @@ const collegesSchema = new Schema({
     address: { type: String, required: true }
 });
 
-module.exports = mongoose.model('colleges', collegesSchema);
+collegesSchema.index({ university: 1 });
+collegesSchema.index({ location: 1 });
+collegesSchema.index({ naacGrade: 1 });
+
+module.exports = mongoose.model('Colleges', collegesSchema);

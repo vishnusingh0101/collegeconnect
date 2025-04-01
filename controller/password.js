@@ -5,12 +5,11 @@ const User = require('../model/user');
 const Forgotpassword = require('../model/password');
 require('dotenv').config();
 
-// MSG91 API credentials
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID;
 const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
 
-// Function to send password reset OTP via MSG91 SMS
+// Send OTP via MSG91
 const sendResetOTP = async (number, otp) => {
     try {
         const payload = {
@@ -25,15 +24,14 @@ const sendResetOTP = async (number, otp) => {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        console.log("OTP sent:", response.data);
         return response.data;
     } catch (error) {
-        console.error("Error sending OTP:", error.response?.data || error.message);
+        console.error("Error sending OTP:", error.message);
         throw new Error("Failed to send OTP for password reset");
     }
 };
 
-// Forgot Password (Generate Reset OTP)
+// Forgot password
 const forgotpassword = async (req, res) => {
     try {
         const { number } = req.body;
@@ -43,22 +41,21 @@ const forgotpassword = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
         const uid = uuid.v4();
 
         await Forgotpassword.create({ uuid: uid, active: true, userId: user._id, otp });
 
-        // Send OTP via MSG91
         await sendResetOTP(number, otp);
 
-        return res.status(200).json({ message: 'OTP sent to your mobile number', success: true });
+        res.status(200).json({ message: 'OTP sent to your mobile number', success: true });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error', success: false });
+        console.error("Error in forgot password:", error.message);
+        res.status(500).json({ message: 'Internal Server Error', success: false });
     }
 };
 
-// Verify OTP & Provide Reset Link
+// Verify OTP & provide reset link
 const verifyOtp = async (req, res) => {
     try {
         const { number, otp } = req.body;
@@ -69,14 +66,14 @@ const verifyOtp = async (req, res) => {
         }
 
         const resetLink = `http://yourwebsite.com/password/resetpassword/${forgotpassword.uuid}`;
-        return res.status(200).json({ message: 'OTP verified. Use reset link.', resetLink, success: true });
+        res.status(200).json({ message: 'OTP verified. Use reset link.', resetLink, success: true });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error', success: false });
+        console.error("Error verifying OTP:", error.message);
+        res.status(500).json({ message: 'Internal Server Error', success: false });
     }
 };
 
-// Reset Password (Update Password)
+// Update password
 const updatepassword = async (req, res) => {
     try {
         const { newPass } = req.body;
@@ -95,14 +92,13 @@ const updatepassword = async (req, res) => {
         user.password = await bcrypt.hash(newPass, 10);
         await user.save();
 
-        // Mark reset entry as used
         forgotpassword.active = false;
         await forgotpassword.save();
 
-        return res.status(200).json({ message: 'Password updated successfully', success: true });
+        res.status(200).json({ message: 'Password updated successfully', success: true });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error', success: false });
+        console.error("Error updating password:", error.message);
+        res.status(500).json({ message: 'Internal Server Error', success: false });
     }
 };
 

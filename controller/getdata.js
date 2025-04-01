@@ -1,11 +1,8 @@
-const mongoose = require('mongoose');
 const Colleges = require('../model/collegeslist');
 const Alumni = require('../model/alumnilist');
 const Student = require('../model/studentlist');
-const fs = require('fs');
 
-
-//controller to get all the collegelist
+// Get all colleges
 exports.collegeList = async (req, res) => {
     try {
         const colleges = await Colleges.find(); 
@@ -15,6 +12,7 @@ exports.collegeList = async (req, res) => {
             data: colleges
         });
     } catch (error) {
+        console.error("Error fetching college list:", error.message);
         res.status(500).json({
             success: false,
             message: "Server Error",
@@ -23,6 +21,7 @@ exports.collegeList = async (req, res) => {
     }
 };
 
+// Get all alumni
 exports.alumniList = async (req, res) => {
     try {
         const alumni = await Alumni.find(); 
@@ -32,6 +31,7 @@ exports.alumniList = async (req, res) => {
             data: alumni
         });
     } catch (error) {
+        console.error("Error fetching alumni list:", error.message);
         res.status(500).json({
             success: false,
             message: "Server Error",
@@ -40,6 +40,7 @@ exports.alumniList = async (req, res) => {
     }
 };
 
+// Get all students
 exports.studentList = async (req, res) => {
     try {
         const student = await Student.find(); 
@@ -49,6 +50,7 @@ exports.studentList = async (req, res) => {
             data: student
         });
     } catch (error) {
+        console.error("Error fetching student list:", error.message);
         res.status(500).json({
             success: false,
             message: "Server Error",

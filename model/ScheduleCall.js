@@ -18,7 +18,25 @@ const scheduleCallSchema = new mongoose.Schema({
     },
     dateTime: { type: Date, required: true },
     duration: { type: Number, enum: [15, 30, 60], required: true },
-    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
+    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+
+    // Payment-related fields
+    paymentStatus: { 
+        type: String, 
+        enum: ['Pending', 'Completed', 'Failed'], 
+        default: 'Pending' 
+    },
+    paymentDetails: {
+        paymentId: { type: String },
+        transactionId: { type: String },
+        amount: { type: Number }, 
+        paymentDate: { type: Date },
+        paymentGateway: { type: String, default: 'Razorpay' },
+    }
 }, { timestamps: true });
+
+scheduleCallSchema.index({ caller: 1 });
+scheduleCallSchema.index({ participant: 1 });
+scheduleCallSchema.index({ dateTime: 1 });
 
 module.exports = mongoose.model('ScheduleCall', scheduleCallSchema);

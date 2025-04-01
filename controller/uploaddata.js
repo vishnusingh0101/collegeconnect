@@ -5,21 +5,28 @@ const Alumni = require('../model/alumnilist');
 const fs = require('fs');
 const path = require('path');
 
+// Function to read JSON data
 const readJSONFile = (filePath) => {
-    if (!fs.existsSync(filePath)) {
-        console.log(`File Not Found: ${filePath}`);
+    try {
+        if (!fs.existsSync(filePath)) {
+            console.error(`File not found: ${filePath}`);
+            return null;
+        }
+        return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    } catch (error) {
+        console.error(`Error reading file ${filePath}:`, error.message);
         return null;
     }
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 };
 
+// File paths for JSON data
 const filePaths = {
     colleges: path.join(__dirname, '../alldata/CData.json'),
     students: path.join(__dirname, '../alldata/StudentData.json'),
     alumni: path.join(__dirname, '../alldata/AlumniData.json'),
 };
 
-// Function to backup and delete existing data
+// Backup and delete existing data
 const backupAndDeleteExistingData = async (Model, collectionName) => {
     try {
         const existingData = await Model.find();
@@ -37,39 +44,35 @@ const backupAndDeleteExistingData = async (Model, collectionName) => {
         await Model.deleteMany();
         console.log(`All existing data deleted from ${collectionName}`);
     } catch (error) {
-        console.error(`Error creating backup for ${collectionName}:`, error);
+        console.error(`Error creating backup for ${collectionName}:`, error.message);
     }
 };
 
-// Function to upload new JSON data
+// Upload data function
 const uploadData = async (Model, filePath, dataType, collectionName) => {
     try {
-        await backupAndDeleteExistingData(Model, collectionName);
-
         const data = readJSONFile(filePath);
         if (!data) return;
+
+        await backupAndDeleteExistingData(Model, collectionName);
 
         await Model.insertMany(data);
         console.log(`${dataType} Data Successfully Imported!`);
     } catch (error) {
-        console.error(`Error Importing ${dataType} Data:`, error);
+        console.error(`Error importing ${dataType} data:`, error.message);
     }
 };
 
 // Function to upload all data (Colleges, Students, Alumni)
 exports.uploadAllData = async (req, res) => {
     try {
-        await uploadData(Colleges, filePaths.colleges, "Colleges", "colleges");
-        await uploadData(Students, filePaths.students, "Students", "students");
-        await uploadData(Alumni, filePaths.alumni, "Alumni", "alumni");
+        await uploadData(Colleges, filePaths.colleges, 'Colleges', 'colleges');
+        await uploadData(Students, filePaths.students, 'Students', 'students');
+        await uploadData(Alumni, filePaths.alumni, 'Alumni', 'alumni');
 
-        if (res) {
-            return res.status(201).json({ message: "All data uploaded successfully!" });
-        }
+        res.status(201).json({ message: "All data uploaded successfully!" });
     } catch (error) {
-        console.error("Error in uploadAllData:", error);
-        if (res) {
-            return res.status(500).json({ message: "Error uploading data", error });
-        }
+        console.error("Error uploading all data:", error.message);
+        res.status(500).json({ message: "Error uploading data", error: error.message });
     }
 };

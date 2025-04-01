@@ -23,22 +23,6 @@ const generateToken = (id, name) => {
 };
 
 // Send OTP using MSG91
-// const sendOTP = async (phone, otp) => {
-//     try {
-//         const response = await axios.post('https://control.msg91.com/api/v5/otp', {
-//             authkey: MSG91_AUTH_KEY,
-//             mobile: `91${phone}`,
-//             otp: otp,
-//             sender: MSG91_SENDER_ID,
-//             template_id: MSG91_TEMPLATE_ID
-//         });
-//         return response.data;
-//     } catch (error) {
-//         console.error("Error sending OTP:", error.response?.data || error.message);
-//         throw new Error("Failed to send OTP");
-//     }
-// };
-
 const sendOTP = async (phone, otp) => {
     try {
         const response = await axios.post('https://control.msg91.com/api/v5/otp', 
@@ -55,7 +39,6 @@ const sendOTP = async (phone, otp) => {
                 }
             }
         );
-
         return response.data;
     } catch (error) {
         console.error("Error sending OTP:", error.response?.data || error.message);
@@ -225,7 +208,7 @@ exports.login = async (req, res) => {
     }
 };
 
-
+// Schedule Call
 exports.scheduleCall = async (req, res) => {
     try {
         const { userId, participantId, participantType, date, time, duration } = req.body;
@@ -245,7 +228,7 @@ exports.scheduleCall = async (req, res) => {
             return res.status(400).json({ message: "Invalid participant type. Use 'student' or 'alumni'." });
         }
 
-        const participantCollection = participantModel === "StudentList" ? StudentList : AlumniList;
+        const participantCollection = participantModel === "StudentList" ? Student : Alumni;
         const participant = await participantCollection.findById(participantId);
         if (!participant) {
             return res.status(404).json({ message: `${participantType} not found.` });
