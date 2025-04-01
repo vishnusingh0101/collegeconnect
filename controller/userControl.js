@@ -13,6 +13,10 @@ const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID;
 const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
 const JWT_SECRET = process.env.JWT_SECRET;
+console.log(MSG91_AUTH_KEY);
+console.log(MSG91_SENDER_ID);
+console.log(MSG91_TEMPLATE_ID);
+console.log(JWT_SECRET);
 
 // Validate phone number
 const isValidPhoneNumber = (phone) => /^[6-9]\d{9}$/.test(phone);
@@ -24,6 +28,10 @@ const generateToken = (id, name) => {
 
 // Send OTP using MSG91
 const sendOTP = async (phone, otp) => {
+    // process.env.MSG91_AUTH_KEY='395515AY2hQSax64494ec4P1'
+    // process.env.MSG91_SENDER_ID='PRVIDR'
+    // process.env.MSG91_TEMPLATE_ID='646c9410d6fc0575cf7d4903'
+    // process.env.JWT_SECRET='HTRDUTD6U5RK6UR5dfghjkjhgfcvbmnb345678fghjDFGHJ567dfgb56yuCHRTDY5YD5687T5E56L7I'
     try {
         const response = await axios.post('https://control.msg91.com/api/v5/otp', 
             {
@@ -35,7 +43,7 @@ const sendOTP = async (phone, otp) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'authkey': MSG91_AUTH_KEY 
+                    'authkey': MSG91_AUTH_KEY
                 }
             }
         );
@@ -208,55 +216,78 @@ exports.login = async (req, res) => {
     }
 };
 
-// Schedule Call
+// Schedule a Call after payment
 exports.scheduleCall = async (req, res) => {
     try {
-        const { userId, participantId, participantType, date, time, duration } = req.body;
+        const { userId, participantId, participantType, date, time, duration, paymentId, paymentSignature, transactionId, amount } = req.body;
 
+        // Validate duration
         const allowedDurations = [15, 30, 60];
         if (!allowedDurations.includes(duration)) {
-            return res.status(400).json({ message: "Invalid duration. Allowed: 15, 30, 60 minutes." });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid duration. Allowed: 15, 30, 60 minutes.",
+            });
         }
 
         const participantModelMap = {
-            student: "StudentList",
-            alumni: "AlumniList"
+            student: Student,
+            alumni: Alumni,
         };
-
-        const participantModel = participantModelMap[participantType.toLowerCase()];
-        if (!participantModel) {
-            return res.status(400).json({ message: "Invalid participant type. Use 'student' or 'alumni'." });
+        const ParticipantCollection = participantModelMap[participantType.toLowerCase()];
+        if (!ParticipantCollection) {
+            return res.status(400).json({ success: false, message: "Invalid participant type. Use 'student' or 'alumni'." });
         }
 
-        const participantCollection = participantModel === "StudentList" ? Student : Alumni;
-        const participant = await participantCollection.findById(participantId);
+        const participant = await ParticipantCollection.findById(participantId);
         if (!participant) {
-            return res.status(404).json({ message: `${participantType} not found.` });
+            return res.status(404).json({ success: false, message: `${participantType} not found.` });
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found." });
+            return res.status(404).json({ success: false, message: "User not found." });
         }
 
-        const dateTime = new Date(`${date}T${time}`);
+        const dateTime = moment(`${date}T${time}`).toDate();
 
         const existingCall = await ScheduleCall.findOne({
             $or: [{ caller: userId }, { participant: participantId }],
-            dateTime
+            dateTime,
         });
-
         if (existingCall) {
-            return res.status(400).json({ message: "User or participant already has a call at this time." });
+            return res.status(400).json({
+                success: false,
+                message: "User or participant already has a call at this time.",
+            });
         }
+
+        if (!paymentId || !paymentSignature) {
+            return res.status(400).json({ success: false, message: "Payment ID and Signature are required to schedule the call." });
+        }
+
+       
+        const isPaymentVerified = await verifyPayment(paymentId, paymentSignature);
+        if (!isPaymentVerified) {
+            return res.status(400).json({ success: false, message: "Payment verification failed." });
+        }
+
+        const paymentDetails = {
+            paymentId,
+            transactionId,
+            amount,
+            paymentDate: new Date(),
+            paymentGateway: "Razorpay", 
+        };
 
         const newCall = new ScheduleCall({
             caller: userId,
             participant: participantId,
-            participantModel,
+            participantModel: participantType.toLowerCase(), 
             dateTime,
             duration,
-            status: "Scheduled"
+            status: "Scheduled", 
+            paymentDetails, 
         });
 
         await newCall.save();
@@ -264,9 +295,17 @@ exports.scheduleCall = async (req, res) => {
         user.scheduledCalls.push(newCall._id);
         await user.save();
 
-        res.status(201).json({ message: "Call scheduled successfully!", call: newCall });
+        res.status(201).json({
+            success: true,
+            message: "Call scheduled successfully!",
+            call: newCall,
+        });
     } catch (error) {
-        console.error("Error scheduling call:", error);
-        res.status(500).json({ message: "Internal server error", error });
+        console.error("Error scheduling call:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message,
+        });
     }
 };
