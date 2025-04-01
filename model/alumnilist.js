@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-const UserProfileSchema = new mongoose.Schema({
+const allumniSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
         trim: true
     },
     profile: {
-        type: String,
+        type: String,  
         trim: true
     },
     bio: {
@@ -15,7 +15,7 @@ const UserProfileSchema = new mongoose.Schema({
         trim: true
     },
     expertise: {
-        type: [String], // Array of expertise (e.g., ["Web Development", "Marketing"])
+        type: [String],
         required: false,
         default: []
     },
@@ -26,4 +26,4 @@ const UserProfileSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('UserProfile', UserProfileSchema);
+module.exports = mongoose.model('allumni', allumniSchema);

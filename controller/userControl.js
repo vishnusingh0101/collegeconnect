@@ -90,7 +90,7 @@ exports.signUp = async (req, res) => {
             phoneIsVerified: false,
             emailIsVerified: false,
             otp,
-            otpExpires: Date.now() + 10 * 60 * 1000 // 10 minutes expiry
+            otpExpires: Date.now() + 10 * 60 * 1000 
         });
 
         await newUser.save();
@@ -118,16 +118,24 @@ exports.verifyOTP = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found!" });
         }
 
-        if (user.otp !== otp || user.otpExpires < Date.now()) {
+        if (!user.otp || user.otp !== otp || user.otpExpires < Date.now()) {
             return res.status(400).json({ success: false, message: "Invalid or expired OTP!" });
         }
 
+        // Mark phone as verified
         user.phoneIsVerified = true;
         user.otp = null;
         user.otpExpires = null;
         await user.save();
 
-        return res.status(200).json({ success: true, message: "Phone number verified successfully!" });
+        // Generate JWT token
+        const token = generateToken(user._id, user.name);
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Phone number verified successfully!", 
+            token 
+        });
 
     } catch (error) {
         console.error("OTP verification error:", error);
@@ -185,6 +193,15 @@ exports.login = async (req, res) => {
         }
 
         if (!user.phoneIsVerified) {
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Update the existing user document instead of creating a new one
+            user.otp = otp;
+            user.otpExpires = Date.now() + 10 * 60 * 1000; 
+
+            await user.save();
+            await sendOTP(phone, otp);
+
             return res.status(403).json({ success: false, message: "Phone number not verified! Please verify OTP first." });
         }
 
@@ -193,20 +210,13 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid credentials!" });
         }
 
-        const token = generateToken(user.id, user.name);
+        const token = generateToken(user.id);
 
         return res.status(200).json({ 
             success: true, 
             message: "Login successful!", 
             token,
-            user: {
-                name: user.name,
-                mail: user.mail,
-                phone: user.phone,
-                registeras: user.registeras,
-                emailVerified: user.emailIsVerified,
-                phoneVerified: user.phoneIsVerified
-            }
+            user: { id: user.id, name: user.name, phone: user.phone }
         });
 
     } catch (error) {
@@ -215,59 +225,59 @@ exports.login = async (req, res) => {
     }
 };
 
+
 exports.scheduleCall = async (req, res) => {
     try {
         const { userId, participantId, participantType, date, time, duration } = req.body;
 
-        // Validate duration (only 15 min, 30 min, or 1 hour allowed)
         const allowedDurations = [15, 30, 60];
         if (!allowedDurations.includes(duration)) {
             return res.status(400).json({ message: "Invalid duration. Allowed: 15, 30, 60 minutes." });
         }
 
-        // Validate participant type
-        if (!["student", "alumni"].includes(participantType)) {
+        const participantModelMap = {
+            student: "StudentList",
+            alumni: "AlumniList"
+        };
+
+        const participantModel = participantModelMap[participantType.toLowerCase()];
+        if (!participantModel) {
             return res.status(400).json({ message: "Invalid participant type. Use 'student' or 'alumni'." });
         }
 
-        // Ensure participant exists
-        const participantModel = participantType === "student" ? Student : Alumni;
-        const participant = await participantModel.findById(participantId);
+        const participantCollection = participantModel === "StudentList" ? StudentList : AlumniList;
+        const participant = await participantCollection.findById(participantId);
         if (!participant) {
             return res.status(404).json({ message: `${participantType} not found.` });
         }
 
-        // Ensure user exists
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Check if the user or participant has an overlapping call
+        const dateTime = new Date(`${date}T${time}`);
+
         const existingCall = await ScheduleCall.findOne({
-            $or: [{ userId }, { participantId }],
-            date,
-            time,
+            $or: [{ caller: userId }, { participant: participantId }],
+            dateTime
         });
 
         if (existingCall) {
             return res.status(400).json({ message: "User or participant already has a call at this time." });
         }
 
-        // Create new scheduled call
         const newCall = new ScheduleCall({
-            userId,
-            participantId,
-            participantType,
-            date,
-            time,
+            caller: userId,
+            participant: participantId,
+            participantModel,
+            dateTime,
             duration,
-            status: "scheduled"
+            status: "Scheduled"
         });
 
         await newCall.save();
 
-        // Save call reference in User model
         user.scheduledCalls.push(newCall._id);
         await user.save();
 
