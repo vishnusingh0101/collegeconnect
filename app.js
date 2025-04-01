@@ -47,7 +47,7 @@ const startServer = async () => {
         });
 
         console.log("Database Connected");
-        await uploadData.uploadAllData();
+        // await uploadData.uploadAllData();
 
         app.listen(3000, () => {
             console.log("Server is running on port 3000");

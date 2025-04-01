@@ -13,10 +13,6 @@ const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID;
 const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
 const JWT_SECRET = process.env.JWT_SECRET;
-console.log(MSG91_AUTH_KEY);
-console.log(MSG91_SENDER_ID);
-console.log(MSG91_TEMPLATE_ID);
-console.log(JWT_SECRET);
 
 // Validate phone number
 const isValidPhoneNumber = (phone) => /^[6-9]\d{9}$/.test(phone);
@@ -33,6 +29,10 @@ const sendOTP = async (phone, otp) => {
     // process.env.MSG91_TEMPLATE_ID='646c9410d6fc0575cf7d4903'
     // process.env.JWT_SECRET='HTRDUTD6U5RK6UR5dfghjkjhgfcvbmnb345678fghjDFGHJ567dfgb56yuCHRTDY5YD5687T5E56L7I'
     try {
+        console.log(MSG91_AUTH_KEY);
+        console.log(MSG91_SENDER_ID);
+        console.log(MSG91_TEMPLATE_ID);
+        console.log(JWT_SECRET);
         const response = await axios.post('https://control.msg91.com/api/v5/otp', 
             {
                 mobile: `91${phone}`,
