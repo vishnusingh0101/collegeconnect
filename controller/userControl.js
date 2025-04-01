@@ -24,15 +24,7 @@ const generateToken = (id, name) => {
 
 // Send OTP using MSG91
 const sendOTP = async (phone, otp) => {
-    // process.env.MSG91_AUTH_KEY='395515AY2hQSax64494ec4P1'
-    // process.env.MSG91_SENDER_ID='PRVIDR'
-    // process.env.MSG91_TEMPLATE_ID='646c9410d6fc0575cf7d4903'
-    // process.env.JWT_SECRET='HTRDUTD6U5RK6UR5dfghjkjhgfcvbmnb345678fghjDFGHJ567dfgb56yuCHRTDY5YD5687T5E56L7I'
     try {
-        console.log(MSG91_AUTH_KEY);
-        console.log(MSG91_SENDER_ID);
-        console.log(MSG91_TEMPLATE_ID);
-        console.log(JWT_SECRET);
         const response = await axios.post('https://control.msg91.com/api/v5/otp', 
             {
                 mobile: `91${phone}`,
