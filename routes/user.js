@@ -7,6 +7,7 @@ router.post('/SignUp', userControl.signUp);
 router.post('/verify-otp', userControl.verifyOTP);
 router.post('/resend-otp', userControl.resendOTP);
 router.post('/login', userControl.login); 
-router.post('/ScheduleCall',auth.authenticate, userControl.login); 
+router.post('/ScheduleCall',auth.authenticate, userControl.scheduleCall); 
+router.post('/ScheduleCall',auth.authenticate, userControl.getCalls); 
 
 module.exports = router;

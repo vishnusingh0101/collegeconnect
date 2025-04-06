@@ -15,6 +15,7 @@ const uploadData = require('./controller/uploaddata');
 const userRoute = require('./routes/user');
 const passwordRoute = require('./routes/password');
 const collegeRoute = require('./routes/getdata'); 
+const paymentRoute = require('./routes/payment'); 
 // const uploadRoutes = require('./routes/uploadData'); 
 
 console.log("Starting App");
@@ -33,6 +34,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.use('/user', userRoute);
 app.use('/password', passwordRoute);
 app.use('/college', collegeRoute);
+app.use('/payment', paymentRoute);
 // app.use('/upload', uploadRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));

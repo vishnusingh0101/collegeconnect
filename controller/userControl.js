@@ -3,8 +3,12 @@ const ScheduleCall = require('../model/ScheduleCall');
 const Student = require('../model/studentlist');
 const Alumni = require('../model/alumnilist');
 
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const moment = require('moment');
 
 require('dotenv').config();
 const axios = require('axios');
@@ -18,8 +22,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const isValidPhoneNumber = (phone) => /^[6-9]\d{9}$/.test(phone);
 
 // Generate JWT token
-const generateToken = (id, name) => {
-    return jwt.sign({ userId: id, name }, JWT_SECRET, { expiresIn: '7d' });
+const generateToken = (id, name, phone) => {
+    return jwt.sign({ userId: id, name, phone }, JWT_SECRET, { expiresIn: '7d' });
 };
 
 // Send OTP using MSG91
@@ -51,9 +55,10 @@ exports.signUp = async (req, res) => {
     try {
         const { name, phone, password } = req.body;
 
-        if (!name || !phone || !password ) {
+        if (!name || !phone || !password) {
             return res.status(400).json({ success: false, message: "All fields are required!" });
         }
+
         if (!isValidPhoneNumber(phone)) {
             return res.status(400).json({ success: false, message: "Invalid phone number!" });
         }
@@ -73,13 +78,24 @@ exports.signUp = async (req, res) => {
             phoneIsVerified: false,
             emailIsVerified: false,
             otp,
-            otpExpires: Date.now() + 10 * 60 * 1000 
+            otpExpires: Date.now() + 10 * 60 * 1000
         });
 
         await newUser.save();
         await sendOTP(phone, otp);
 
-        return res.status(201).json({ success: true, message: "User registered! Verify OTP to activate your account." });
+        // Prepare response user data (excluding sensitive fields)
+        const userObj = newUser.toObject();
+        delete userObj.password;
+        delete userObj.otp;
+        delete userObj.otpExpires;
+        delete userObj.otpVerifiedForReset;
+
+        return res.status(201).json({
+            success: true,
+            message: "User registered! Verify OTP to activate your account.",
+            user: userObj
+        });
 
     } catch (error) {
         console.error("Signup error:", error);
@@ -112,7 +128,7 @@ exports.verifyOTP = async (req, res) => {
         await user.save();
 
         // Generate JWT token
-        const token = generateToken(user._id, user.name);
+        const token = generateToken(user._id, user.name, user.phone);
 
         return res.status(200).json({ 
             success: true, 
@@ -170,22 +186,13 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid phone number format!" });
         }
 
-        const user = await User.findOne({ phone });
+        const user = await User.findOne({ phone })
+            .populate('about')
+            .populate('prices')
+            .populate('scheduledCalls');
+
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found! Please check your number." });
-        }
-
-        if (!user.phoneIsVerified) {
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-            // Update the existing user document instead of creating a new one
-            user.otp = otp;
-            user.otpExpires = Date.now() + 10 * 60 * 1000; 
-
-            await user.save();
-            await sendOTP(phone, otp);
-
-            return res.status(403).json({ success: false, message: "Phone number not verified! Please verify OTP first." });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -193,13 +200,34 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid credentials!" });
         }
 
-        const token = generateToken(user.id);
+        if (!user.phoneIsVerified) {
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        return res.status(200).json({ 
-            success: true, 
-            message: "Login successful!", 
+            user.otp = otp;
+            user.otpExpires = Date.now() + 10 * 60 * 1000;
+
+            await user.save();
+            await sendOTP(phone, otp);
+
+            return res.status(403).json({ success: false, message: "Phone number not verified! Please verify OTP first." });
+        }
+
+        const token = generateToken(user.id, user.name, user.phone);
+
+        // Convert Mongoose document to plain object
+        const userObj = user.toObject();
+
+        // Remove sensitive fields
+        delete userObj.password;
+        delete userObj.otp;
+        delete userObj.otpExpires;
+        delete userObj.otpVerifiedForReset;
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful!",
             token,
-            user: { id: user.id, name: user.name, phone: user.phone }
+            user: userObj
         });
 
     } catch (error) {
@@ -209,9 +237,118 @@ exports.login = async (req, res) => {
 };
 
 // Schedule a Call after payment
+// exports.scheduleCall = async (req, res) => {
+//     try {
+//         const { userId, participantId, participantType, date, time, duration, paymentId, paymentSignature, transactionId, amount } = req.body;
+
+//         // Validate duration
+//         const allowedDurations = [15, 30, 60];
+//         if (!allowedDurations.includes(duration)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Invalid duration. Allowed: 15, 30, 60 minutes.",
+//             });
+//         }
+
+//         const participantModelMap = {
+//             student: Student,
+//             alumni: Alumni,
+//         };
+//         const ParticipantCollection = participantModelMap[participantType.toLowerCase()];
+//         if (!ParticipantCollection) {
+//             return res.status(400).json({ success: false, message: "Invalid participant type. Use 'student' or 'alumni'." });
+//         }
+
+//         const participant = await ParticipantCollection.findById(participantId);
+//         if (!participant) {
+//             return res.status(404).json({ success: false, message: `${participantType} not found.` });
+//         }
+
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ success: false, message: "User not found." });
+//         }
+
+//         const dateTime = moment(`${date}T${time}`).toDate();
+
+//         const existingCall = await ScheduleCall.findOne({
+//             $or: [{ caller: userId }, { participant: participantId }],
+//             dateTime,
+//         });
+//         if (existingCall) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "User or participant already has a call at this time.",
+//             });
+//         }
+
+//         if (!paymentId || !paymentSignature) {
+//             return res.status(400).json({ success: false, message: "Payment ID and Signature are required to schedule the call." });
+//         }
+
+       
+//         // const isPaymentVerified = await verifyPayment(paymentId, paymentSignature);
+//         // if (!isPaymentVerified) {
+//         //     return res.status(400).json({ success: false, message: "Payment verification failed." });
+//         // }
+
+//         const paymentDetails = {
+//             paymentId,
+//             transactionId,
+//             amount,
+//             paymentDate: new Date(),
+//             paymentGateway: "Razorpay", 
+//         };
+
+//         const newCall = new ScheduleCall({
+//             caller: userId,
+//             participant: participantId,
+//             participantModel: participantType.toLowerCase(),
+//             dateTime,
+//             duration,
+//             status: "Scheduled", 
+//             paymentDetails, 
+//         });
+
+//         await newCall.save();
+
+//         user.scheduledCalls.push(newCall._id);
+//         await user.save();
+
+//         res.status(201).json({
+//             success: true,
+//             message: "Call scheduled successfully!",
+//             call: newCall,
+//         });
+//     } catch (error) {
+//         console.error("Error scheduling call:", error.message);
+//         res.status(500).json({
+//             success: false,
+//             message: "Internal server error",
+//             error: error.message,
+//         });
+//     }
+// };
+
+
+// Assuming razorpayInstance is initialized somewhere
+// const razorpayInstance = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
+
 exports.scheduleCall = async (req, res) => {
     try {
-        const { userId, participantId, participantType, date, time, duration, paymentId, paymentSignature, transactionId, amount } = req.body;
+        const { 
+            userId, 
+            participantId, 
+            participantType, 
+            date, 
+            time, 
+            duration, 
+            paymentId, 
+            paymentSignature, 
+            transactionId, 
+            amount, 
+            callType
+        } = req.body;
 
         // Validate duration
         const allowedDurations = [15, 30, 60];
@@ -222,6 +359,7 @@ exports.scheduleCall = async (req, res) => {
             });
         }
 
+        // Validate participant type
         const participantModelMap = {
             student: Student,
             alumni: Alumni,
@@ -231,11 +369,13 @@ exports.scheduleCall = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid participant type. Use 'student' or 'alumni'." });
         }
 
+        // Check if participant exists
         const participant = await ParticipantCollection.findById(participantId);
         if (!participant) {
             return res.status(404).json({ success: false, message: `${participantType} not found.` });
         }
 
+        // Check if user exists
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
@@ -243,6 +383,7 @@ exports.scheduleCall = async (req, res) => {
 
         const dateTime = moment(`${date}T${time}`).toDate();
 
+        // Check for scheduling conflicts
         const existingCall = await ScheduleCall.findOne({
             $or: [{ caller: userId }, { participant: participantId }],
             dateTime,
@@ -254,36 +395,46 @@ exports.scheduleCall = async (req, res) => {
             });
         }
 
-        if (!paymentId || !paymentSignature) {
-            return res.status(400).json({ success: false, message: "Payment ID and Signature are required to schedule the call." });
+        if (!paymentId || !paymentSignature || !transactionId) {
+            return res.status(400).json({
+                success: false,
+                message: "Payment ID, Signature, and Transaction ID are required.",
+            });
         }
 
-       
-        const isPaymentVerified = await verifyPayment(paymentId, paymentSignature);
-        if (!isPaymentVerified) {
+        const generatedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(`${transactionId}|${paymentId}`)
+            .digest("hex");
+
+        if (generatedSignature !== paymentSignature) {
             return res.status(400).json({ success: false, message: "Payment verification failed." });
         }
 
+        // Prepare payment details
         const paymentDetails = {
             paymentId,
             transactionId,
             amount,
             paymentDate: new Date(),
-            paymentGateway: "Razorpay", 
+            paymentGateway: "Razorpay",
         };
 
+        // Create and save the scheduled call
         const newCall = new ScheduleCall({
             caller: userId,
             participant: participantId,
-            participantModel: participantType.toLowerCase(), 
+            participantModel: participantType.toLowerCase(),
             dateTime,
             duration,
-            status: "Scheduled", 
-            paymentDetails, 
+            callType,
+            status: "Scheduled",
+            paymentDetails,
         });
 
         await newCall.save();
 
+        // Push call to user
         user.scheduledCalls.push(newCall._id);
         await user.save();
 
