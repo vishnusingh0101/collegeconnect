@@ -1,7 +1,7 @@
 const User = require('../model/user');
 const ScheduleCall = require('../model/ScheduleCall');
-const Student = require('../model/studentlist');
-const Alumni = require('../model/alumnilist');
+const studentlist = require('../model/studentlist');
+const alumnilist = require('../model/alumnilist');
 
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
@@ -12,6 +12,7 @@ const moment = require('moment');
 
 require('dotenv').config();
 const axios = require('axios');
+const alumnilist = require('../model/alumnilist');
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID;
@@ -361,8 +362,8 @@ exports.scheduleCall = async (req, res) => {
 
         // Validate participant type
         const participantModelMap = {
-            student: Student,
-            alumni: Alumni,
+            studentlist: studentlist,
+            alumnilist: alumnilist,
         };
         const ParticipantCollection = participantModelMap[participantType.toLowerCase()];
         if (!ParticipantCollection) {
