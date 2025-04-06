@@ -10,13 +10,11 @@ require('dotenv').config();
 const app = express();
 
 const errorControl = require('./controller/error');
-const uploadData = require('./controller/uploaddata');
 
 const userRoute = require('./routes/user');
 const passwordRoute = require('./routes/password');
 const collegeRoute = require('./routes/getdata'); 
 const paymentRoute = require('./routes/payment'); 
-// const uploadRoutes = require('./routes/uploadData'); 
 
 console.log("Starting App");
 
@@ -35,7 +33,6 @@ app.use('/user', userRoute);
 app.use('/password', passwordRoute);
 app.use('/college', collegeRoute);
 app.use('/payment', paymentRoute);
-// app.use('/upload', uploadRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -49,7 +46,6 @@ const startServer = async () => {
         });
 
         console.log("Database Connected");
-        // await uploadData.uploadAllData();
 
         app.listen(3000, () => {
             console.log("Server is running on port 3000");

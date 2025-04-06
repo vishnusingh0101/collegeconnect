@@ -340,7 +340,7 @@ exports.scheduleCall = async (req, res) => {
             userId, 
             participantId, 
             participantType, 
-            date, 
+            date,   
             time, 
             duration, 
             paymentId, 
@@ -450,5 +450,45 @@ exports.scheduleCall = async (req, res) => {
             message: "Internal server error",
             error: error.message,
         });
+    }
+};
+
+exports.getCalls = async (req, res) => {
+    try {
+        const { participantId, date } = req.query;
+
+        if (!participantId) {
+            return res.status(400).json({ success: false, message: "Participant ID is required" });
+        }
+
+        const query = { participant: participantId };
+
+        if (date) {
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            query.dateTime = { $gte: startOfDay, $lte: endOfDay };
+        }
+
+        const calls = await ScheduleCall.find(query)
+            .populate('caller', '-password -otp -otpExpires') // exclude sensitive caller fields
+            .populate({
+                path: 'participant',
+                model: doc => doc.participantModel, // dynamic model population
+                select: '-password -otp -otpExpires'
+            });
+
+        return res.status(200).json({
+            success: true,
+            count: calls.length,
+            data: calls
+        });
+
+    } catch (error) {
+        console.error("Error fetching calls:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };

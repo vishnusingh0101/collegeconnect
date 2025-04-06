@@ -16,7 +16,7 @@ const scheduleCallSchema = new mongoose.Schema({
         enum: ['StudentList', 'AlumniList', 'Teacher'],
         required: true
     },
-    callType:{ type: String, requirred},
+    callType:{ type: String, requirred: true},
     dateTime: { type: Date, required: true },
     duration: { type: Number, enum: [15, 30, 60], required: true },
     status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
