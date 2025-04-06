@@ -40,10 +40,7 @@ app.use(errorControl.get404);
 
 const startServer = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        await mongoose.connect(process.env.MONGODB);
 
         console.log("Database Connected");
 
@@ -54,5 +51,6 @@ const startServer = async () => {
         console.error("Database Connection Error:", err);
     }
 };
+
 
 startServer();
