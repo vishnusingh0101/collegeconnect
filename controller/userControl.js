@@ -12,7 +12,6 @@ const moment = require('moment');
 
 require('dotenv').config();
 const axios = require('axios');
-const alumnilist = require('../model/alumnilist');
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID;
