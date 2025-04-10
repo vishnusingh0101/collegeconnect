@@ -15,7 +15,7 @@ const scheduleCallSchema = new mongoose.Schema({
         type: String,
         enum: ['studentlist', 'alumnilist', 'teacher'],
         required: true
-    },
+    },  
     callType:{ type: String, requirred: true},
     dateTime: { type: Date, required: true },
     duration: { type: Number, enum: [15, 30, 60], required: true },
@@ -33,7 +33,11 @@ const scheduleCallSchema = new mongoose.Schema({
         amount: { type: Number }, 
         paymentDate: { type: Date },
         paymentGateway: { type: String, default: 'Razorpay' },
-    }
+    },
+    meetLink: {
+        type: String,
+        required: false,
+    },  
 }, { timestamps: true });
 
 scheduleCallSchema.index({ caller: 1 });

@@ -6,6 +6,7 @@ const alumnilist = require('../model/alumnilist');
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
+const { createGoogleMeet } = require('../utils/googleCalender');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
@@ -336,54 +337,73 @@ exports.login = async (req, res) => {
 
 exports.scheduleCall = async (req, res) => {
     try {
-        const { 
-            userId, 
-            participantId, 
-            participantType, 
-            date,   
-            time, 
-            duration, 
-            paymentId, 
-            paymentSignature, 
-            transactionId, 
-            amount, 
-            callType
+        const {
+            userId,
+            participantId,
+            participantType,
+            date,
+            time,
+            duration,
+            paymentId,
+            paymentSignature,
+            transactionId,
+            amount,
+            callType,
         } = req.body;
+
+        // Validate required fields
+        if (!userId || !participantId || !participantType || !date || !time || !duration || !paymentId || !paymentSignature || !transactionId || !amount || !callType) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required.",
+            });
+        }
 
         // Validate duration
         const allowedDurations = [15, 30, 60];
         if (!allowedDurations.includes(duration)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid duration. Allowed: 15, 30, 60 minutes.",
+                message: "Invalid duration. Allowed values: 15, 30, 60 minutes.",
             });
         }
 
-        // Validate participant type
+        // Get participant model
         const participantModelMap = {
             studentlist: studentlist,
             alumnilist: alumnilist,
         };
         const ParticipantCollection = participantModelMap[participantType.toLowerCase()];
         if (!ParticipantCollection) {
-            return res.status(400).json({ success: false, message: "Invalid participant type. Use 'student' or 'alumni'." });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid participant type. Use 'studentlist' or 'alumnilist'.",
+            });
         }
 
-        // Check if participant exists
+        // Fetch participant
         const participant = await ParticipantCollection.findById(participantId);
         if (!participant) {
-            return res.status(404).json({ success: false, message: `${participantType} not found.` });
+            return res.status(404).json({
+                success: false,
+                message: `${participantType} not found.`,
+            });
         }
 
-        // Check if user exists
+        // Fetch user
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found." });
+            return res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
         }
 
-        const dateTime = moment(`${date}T${time}`).toDate();
+        const startTime = moment(`${date}T${time}`);
+        const endTime = startTime.clone().add(duration, 'minutes');
+        const dateTime = startTime.toDate();
 
-        // Check for scheduling conflicts
+        // Scheduling conflict check
         const existingCall = await ScheduleCall.findOne({
             $or: [{ caller: userId }, { participant: participantId }],
             dateTime,
@@ -395,23 +415,37 @@ exports.scheduleCall = async (req, res) => {
             });
         }
 
-        if (!paymentId || !paymentSignature || !transactionId) {
-            return res.status(400).json({
-                success: false,
-                message: "Payment ID, Signature, and Transaction ID are required.",
-            });
-        }
-
+        // Validate payment signature
         const generatedSignature = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(`${transactionId}|${paymentId}`)
             .digest("hex");
 
         if (generatedSignature !== paymentSignature) {
-            return res.status(400).json({ success: false, message: "Payment verification failed." });
+            return res.status(400).json({
+                success: false,
+                message: "Payment verification failed.",
+            });
         }
 
-        // Prepare payment details
+        // Generate Google Meet link
+        let meetLink = null;
+        try {
+            meetLink = await createGoogleMeet({
+                startTime,
+                endTime,
+                user,
+                participant,
+            });
+        } catch (err) {
+            console.error("Google Meet error:", err.message);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to generate Google Meet link.",
+            });
+        }
+
+        // Construct payment details
         const paymentDetails = {
             paymentId,
             transactionId,
@@ -420,7 +454,7 @@ exports.scheduleCall = async (req, res) => {
             paymentGateway: "Razorpay",
         };
 
-        // Create and save the scheduled call
+        // Create and save call record
         const newCall = new ScheduleCall({
             caller: userId,
             participant: participantId,
@@ -430,22 +464,25 @@ exports.scheduleCall = async (req, res) => {
             callType,
             status: "Scheduled",
             paymentDetails,
+            meetLink,
         });
 
         await newCall.save();
 
-        // Push call to user
+        // Add call to user's record
         user.scheduledCalls.push(newCall._id);
         await user.save();
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "Call scheduled successfully!",
             call: newCall,
+            meetLink, // easy access
         });
+
     } catch (error) {
-        console.error("Error scheduling call:", error.message);
-        res.status(500).json({
+        console.error("Unexpected error in scheduleCall:", error);
+        return res.status(500).json({
             success: false,
             message: "Internal server error",
             error: error.message,
@@ -474,10 +511,10 @@ exports.getCalls = async (req, res) => {
         }
 
         const calls = await ScheduleCall.find(query)
-            .populate('caller', '-password -otp -otpExpires') // exclude sensitive caller fields
+            .populate('caller', '-password -otp -otpExpires') 
             .populate({
                 path: 'participant',
-                model: doc => doc.participantModel, // dynamic model population
+                model: doc => doc.participantModel,
                 select: '-password -otp -otpExpires'
             });
 
